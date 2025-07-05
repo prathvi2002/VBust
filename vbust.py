@@ -11,6 +11,8 @@ import ipaddress  # for checking invalid ips
 # Disable SSL certificate warnings 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+#TODO: Change the replacing /etc/hosts logic with: on the first start of tool make it enter # vhost in the end of /etc/host and under it add the mapping it wanna add, if the # vhost already exists then delete it first. This will solve the problem: Sometimes when the interrupted with `ctrl` + `c` it is not able to delete the last line in `/etc/hosts` it added
+
 
 if "--nocolour" in sys.argv:
     # If --nocolour flag is passed via command line, then colour colour variabes won't make effect in code even if they are used
@@ -59,7 +61,7 @@ def main(ip, domain, proxy_url=False):
                     response = False
 
                 if response:
-                    print(f"{GREEN}[+]{RESET} Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response}.{RESET}", f"Using /etc/hosts mapping: {new_map_entry}")
+                    print(f"{GREEN}{RESET} Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response}.{RESET}", f"Using /etc/hosts mapping: {new_map_entry}")
                 else:
                     # it will print request: having response 400, 500 response codes OR no response at all (in this case response = False)
                     print(f"{GRAY}Request failed for URL: {url} Response: {response}.{RESET}", f"{GRAY}Using /etc/hosts mapping: {new_map_entry}{RESET}")
@@ -90,7 +92,7 @@ def main(ip, domain, proxy_url=False):
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description="A script to brute force virtual hosts. It takes a list of IPs and a list of domains, then it uses each IP address in provided list as a resolving dns IP for every domain names provided in the list to see if the request succeeds. Basically for each IP in the list try all domains.")
+    parser = argparse.ArgumentParser(description="A script to brute-force virtual hosts by testing domain resolution across multiple IPs. \nIt takes a list of IP addresses and a list of domain names, then maps each domain to each IP in /etc/hosts, then sends request to determine if a successful HTTP response is returned. Essentially, for every IP, it tries all domains to get HTTP response.")
     # Define expected arguments=
     parser.add_argument(
         "--ips",
