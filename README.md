@@ -7,4 +7,4 @@
 - Do not run more than one instance of VBust simultaneously — it modifies `/etc/hosts`, and concurrent edits can interfere with each other.
 - If the domain list contains fewer than 10 entries, threading will not be used even if the `--threads` option is used.
 - When using the `--threads` option, domains are processed in batches of 10. If the final batch contains fewer than 10 domains, it won’t use threading — those remaining domains will be processed sequentially instead.
-- Every time VBust runs (without `--dryrun`) a secondary backup `/etc/hosts.bak2` is created which is not auto-deleted to allow manual recovery if the tool fails to restore from /etc/hosts.bak
+- Every time VBust runs (without `--dryrun`) a secondary backup `/etc/hosts.bak2` is created which is not auto-deleted to allow manual recovery if the tool fails to restore from `/etc/hosts.bak`.
