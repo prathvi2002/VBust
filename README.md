@@ -1,6 +1,10 @@
 # VBust - A virtual host brute-forcing tool.
 
-## Some points to keep in mind or might come handy while using ParamSage
+### What is virtual host discovery?
+Some subdomains aren't always hosted in publically accessible DNS results, such as development versions of a web application or administration portals. Instead, the DNS record could be kept on a private DNS server or recorded on the developer's machines in their `/etc/hosts` file (or `c:\windows\system32\drivers\etc\hosts` file for Windows users) which maps domain names to IP addresses.
+Because web servers can host multiple websites from one server when a website is requested from a client, the server knows which website the client wants from the `Host` header. We can utilize this host header by making changes to it and monitoring the response to see if we've discovered a new website.
+
+### Some points to keep in mind or might come handy while using ParamSage
 - *Sometimes* if the tool is interrupted using `ctrl`+`c`, it will not be able to remove the last mapping line added to `/etc/hosts`.
 - To filter out IP–domain mappings that received no response at all, you can pipe the output through: `grep -v "Response: False"`
 - Avoid using a proxy on ports 80, 443, 8080, or 8443 when running VBust, or it can cause False positives.
