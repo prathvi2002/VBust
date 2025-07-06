@@ -220,8 +220,8 @@ def map_and_probe_domain(ip, req_timeout, domain=None, proxy_url=None, threading
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description="A script to brute-force virtual hosts by testing domain resolution across multiple IPs. \nIt takes a list of IP addresses and a list of domain names, then maps each domain to each IP in /etc/hosts, then sends request to determine if a successful HTTP response is returned. Essentially, for every IP, it tries all domains to get HTTP response.")
-    # Define expected arguments=
+    parser = argparse.ArgumentParser(description="A script to brute-force virtual hosts by testing domain resolution across multiple IPs. \nIt takes a list of IP addresses and a list of domain names, then maps each domain to each IP in /etc/hosts, then sends request to determine if a successful HTTP response is returned. Essentially, for every IP, it tries all domains to get HTTP response.", formatter_class=argparse.RawDescriptionHelpFormatter)
+    # Define expected arguments
     parser.add_argument(
         "--ips",
         type=str,
