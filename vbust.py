@@ -13,9 +13,6 @@ from urllib.parse import urlparse
 # Disable SSL certificate warnings 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-#TODO: Change the replacing /etc/hosts logic with: on the first start of tool make it enter # vhost in the end of /etc/host and under it add the mapping it wanna add, if the # vhost already exists then delete it first. This will solve the problem: Sometimes when the interrupted with `ctrl` + `c` it is not able to delete the last line in `/etc/hosts` it added
-
-
 if "--nocolour" in sys.argv:
     # If --nocolour flag is passed via command line, then colour colour variabes won't make effect in code even if they are used
     YELLOW = ""
