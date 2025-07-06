@@ -33,6 +33,8 @@ else:
 
 def map_and_probe_domain(ip, req_timeout, domain=None, proxy_url=None, threading_threads=None, threads_domain_batch=None):
     try:
+        # It clears the DNS cache maintained by systemd-resolved, forcing fresh lookups for future DNS queries. (idk if my wsl Ubuntu is using systemd-resolved for DNS resolution but still adding it here in case it is using it)
+        subprocess.run("sudo resolvectl flush-caches", shell=True, check=True)
         # # Map each domain to every IP and make a request
         try:
             proxies = {"http": proxy_url, "https": proxy_url} if proxy_url else None
