@@ -252,7 +252,7 @@ if __name__ == "__main__":
         "--threads",
         default=None,
         action="store_true",
-        help="Use threads to process 10 mappings at a time."
+        help="Use threads to process 10 ip-domain mappings and common ports for each of those mappings at a time."
     )
     parser.add_argument(
         "--timeout",
