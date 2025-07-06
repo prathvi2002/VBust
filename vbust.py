@@ -38,6 +38,10 @@ def map_and_probe_domain(ip, req_timeout, domain=None, proxy_url=None, threading
     try:
         # # Map each domain to every IP and make a request
         try:
+            proxies = {"http": proxy_url, "https": proxy_url} if proxy_url else None
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0"
+            }
 
             if threading_threads:
                 # Initialize the mapping for this domain batch by cleaning any existing mapping in /etc/hosts
@@ -89,11 +93,6 @@ def map_and_probe_domain(ip, req_timeout, domain=None, proxy_url=None, threading
 
                 def send_probe_requests(url):
                     try:
-                        proxies = {"http": proxy_url, "https": proxy_url} if proxy_url else None
-                        headers = {
-                            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0"
-                        }
-
                         # after done mapping all batch domains to current IP in /etc/hosts in the before logic, making an HTTP request to url provided to see if it succeeds.
                         response = requests.get(url, timeout=req_timeout, proxies=proxies, verify=False, allow_redirects=False, headers=headers)
                     # Handles all request failures
@@ -170,7 +169,10 @@ def map_and_probe_domain(ip, req_timeout, domain=None, proxy_url=None, threading
 
             if threading_threads is None:
                 # Map each domain to every IP and replace last line each time
-                new_map_entry_0 = f"{ip} {domain}"
+                new_map_entry = f"{ip} {domain}"
+
+                cmd = f'echo "{new_map_entry}" | sudo tee /etc/hosts > /dev/null'
+                subprocess.run(cmd, shell=True, check=True)
 
                 # after mapping current domain to current IP in /etc/hosts, making an HTTP request to current domain using different ports to see if it succeeds.
                 urls = [
@@ -185,31 +187,16 @@ def map_and_probe_domain(ip, req_timeout, domain=None, proxy_url=None, threading
                 for url in urls:
                     # Makes a GET request to current URL. Timeout is 10 seconds. Through the proxy if supplied in cli argument. Without SSL verification. Not following redirects.
                     try:
-                        proxies = {"http": proxy_url, "https": proxy_url} if proxy_url else None
-                        headers = {
-                            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0"
-                        }
-
-                        #! always keep these lines right above the request so when threading is used, function called using one threads doesn't override the already running thread's /etc/hosts mapping entry
-                        # cmd = 'echo "" | sudo tee -a /etc/hosts > /dev/null'
-                        # subprocess.run(cmd, shell=True, check=True)
-                        # # print(f"🔄 Replacing /etc/hosts last line with: {new_entry}")
-                        # sed_cmd = f"$s/.*/{new_map_entry}/"
-                        # subprocess.run(["sudo", "sed", "-i", sed_cmd, "/etc/hosts"], check=True)  # `sudo sed -i '$s/.*/1.2.3.4 example.com/' /etc/hosts` edits the file in-place, '$' targets the last line, s/.*/.../ replaces the entire content of that line with your desired text.
-
-                        cmd = f'echo "{new_map_entry_0}" | sudo tee /etc/hosts > /dev/null'
-                        subprocess.run(cmd, shell=True, check=True)
-
                         response = requests.get(url, timeout=req_timeout, proxies=proxies, verify=False, allow_redirects=False, headers=headers)
                     # Handles all request failures
                     except Exception as e:
                         response = False
 
                     if response:
-                        print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response}.{RESET}", f"Using /etc/hosts mapping: {new_map_entry_0}")
+                        print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response}.{RESET}", f"Using /etc/hosts mapping: {new_map_entry}")
                     else:
                         # it will print request: having response 400, 500 response codes OR no response at all (in this case response = False)
-                        print(f"{GRAY}Request failed for URL: {url} Response: {response}.{RESET}", f"{GRAY}Using /etc/hosts mapping: {new_map_entry_0}{RESET}")
+                        print(f"{GRAY}Request failed for URL: {url} Response: {response}.{RESET}", f"{GRAY}Using /etc/hosts mapping: {new_map_entry}{RESET}")
 
         except KeyboardInterrupt as e:
             print("\n⚠️ Interrupted by user. Restoring /etc/hosts from backup and Exiting.")
