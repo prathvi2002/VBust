@@ -8,6 +8,7 @@ import requests
 import urllib3  # For handling SSL warning suppression
 import ipaddress  # for checking invalid ips
 import threading
+from urllib.parse import urlparse
 
 # Disable SSL certificate warnings 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -33,69 +34,182 @@ else:
     RESET = "\033[0m"
 
 
-def map_and_probe_domain(ip, domain, req_timeout, proxy_url=None):
+def map_and_probe_domain(ip, req_timeout, domain=None, proxy_url=None, threading_threads=None, threads_domain_batch=None):
     try:
-        # Map each domain to every IP and replace last line each time
-        new_map_entry = f"{ip} {domain}"
+        # # Map each domain to every IP and make a request
         try:
-            subprocess.run(["sudo", "cp", "/etc/hosts", "/etc/hosts.bak2"], check=True)  # Secondary backup created (not auto-deleted) to allow manual recovery if the tool fails to restore from /etc/hosts.bak
 
-            # # write an empty line to the end of the /etc/hosts file (doing this so when threading is used, function called using one threads doesn't override the already running thread's /etc/hosts mapping entry)
-            # cmd = 'echo "" | sudo tee -a /etc/hosts > /dev/null'
-            # subprocess.run(cmd, shell=True, check=True)
+            if threading_threads:
+                # Initialize the mapping for this domain batch by cleaning any existing mapping in /etc/hosts
+                new_map_entry_init = ""
+                cmd = f'echo "{new_map_entry_init}" | sudo tee /etc/hosts > /dev/null'
+                subprocess.run(cmd, shell=True, check=True)
 
-            # cmd = 'echo "" | sudo tee -a /etc/hosts > /dev/null'  # for http 80 port
-            # subprocess.run(cmd, shell=True, check=True)
-            # cmd = 'echo "" | sudo tee -a /etc/hosts > /dev/null'  # for https 443 port
-            # subprocess.run(cmd, shell=True, check=True)
-            # cmd = 'echo "" | sudo tee -a /etc/hosts > /dev/null'  # for http 8443 port
-            # subprocess.run(cmd, shell=True, check=True)
-            # cmd = 'echo "" | sudo tee -a /etc/hosts > /dev/null'  # for https 8443 port
-            # subprocess.run(cmd, shell=True, check=True)
-            # cmd = 'echo "" | sudo tee -a /etc/hosts > /dev/null'  # for http 8080 port
-            # subprocess.run(cmd, shell=True, check=True)
-            # cmd = 'echo "" | sudo tee -a /etc/hosts > /dev/null'  # for https 8080 port
-            # subprocess.run(cmd, shell=True, check=True)
+                # Map each domain to every IP and add it to last line each time (for each domain in the 10 domains batch by appending to /etc/hosts)
+                new_map_entry_0 = f"{ip} {threads_domain_batch[0]}"
+                cmd = f'echo "{new_map_entry_0}" | sudo tee -a /etc/hosts > /dev/null'
+                subprocess.run(cmd, shell=True, check=True)
 
-            # # print(f"🔄 Replacing /etc/hosts last line with: {new_entry}")
-            # sed_cmd = f"$s/.*/{new_map_entry}/"
-            # subprocess.run(["sudo", "sed", "-i", sed_cmd, "/etc/hosts"], check=True)  # `sudo sed -i '$s/.*/1.2.3.4 example.com/' /etc/hosts` edits the file in-place, '$' targets the last line, s/.*/.../ replaces the entire content of that line with your desired text.
+                new_map_entry_1 = f"{ip} {threads_domain_batch[1]}"
+                cmd = f'echo "{new_map_entry_1}" | sudo tee -a /etc/hosts > /dev/null'
+                subprocess.run(cmd, shell=True, check=True)
 
-            # after mapping current domain to current IP in /etc/hosts, making an HTTP request to current domain using different ports to see if it succeeds.
-            urls = [
-                f"http://{domain}",
-                f"https://{domain}",
-                f"http://{domain}:8443",
-                f"https://{domain}:8443",
-                f"http://{domain}:8080",
-                f"https://{domain}:8080"
-            ]
+                new_map_entry_2 = f"{ip} {threads_domain_batch[2]}"
+                cmd = f'echo "{new_map_entry_2}" | sudo tee -a /etc/hosts > /dev/null'
+                subprocess.run(cmd, shell=True, check=True)
 
-            for url in urls:
-                # Makes a GET request to current URL. Timeout is 10 seconds. Through the proxy if supplied in cli argument. Without SSL verification. Not following redirects.
-                try:
-                    proxies = {"http": proxy_url, "https": proxy_url} if proxy_url else None
+                new_map_entry_3 = f"{ip} {threads_domain_batch[3]}"
+                cmd = f'echo "{new_map_entry_3}" | sudo tee -a /etc/hosts > /dev/null'
+                subprocess.run(cmd, shell=True, check=True)
 
-                    #! always keep these lines right above the request so when threading is used, function called using one threads doesn't override the already running thread's /etc/hosts mapping entry
-                    # cmd = 'echo "" | sudo tee -a /etc/hosts > /dev/null'
-                    # subprocess.run(cmd, shell=True, check=True)
-                    # # print(f"🔄 Replacing /etc/hosts last line with: {new_entry}")
-                    # sed_cmd = f"$s/.*/{new_map_entry}/"
-                    # subprocess.run(["sudo", "sed", "-i", sed_cmd, "/etc/hosts"], check=True)  # `sudo sed -i '$s/.*/1.2.3.4 example.com/' /etc/hosts` edits the file in-place, '$' targets the last line, s/.*/.../ replaces the entire content of that line with your desired text.
+                new_map_entry_4 = f"{ip} {threads_domain_batch[4]}"
+                cmd = f'echo "{new_map_entry_4}" | sudo tee -a /etc/hosts > /dev/null'
+                subprocess.run(cmd, shell=True, check=True)
 
-                    cmd = f'echo "{new_map_entry}" | sudo tee /etc/hosts > /dev/null'
-                    subprocess.run(cmd, shell=True, check=True)
+                new_map_entry_5 = f"{ip} {threads_domain_batch[5]}"
+                cmd = f'echo "{new_map_entry_5}" | sudo tee -a /etc/hosts > /dev/null'
+                subprocess.run(cmd, shell=True, check=True)
 
-                    response = requests.get(url, timeout=req_timeout, proxies=proxies, verify=False, allow_redirects=False)
-                # Handles all request failures
-                except Exception as e:
-                    response = False
+                new_map_entry_6 = f"{ip} {threads_domain_batch[6]}"
+                cmd = f'echo "{new_map_entry_6}" | sudo tee -a /etc/hosts > /dev/null'
+                subprocess.run(cmd, shell=True, check=True)
 
-                if response:
-                    print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response}.{RESET}", f"Using /etc/hosts mapping: {new_map_entry}")
-                else:
-                    # it will print request: having response 400, 500 response codes OR no response at all (in this case response = False)
-                    print(f"{GRAY}Request failed for URL: {url} Response: {response}.{RESET}", f"{GRAY}Using /etc/hosts mapping: {new_map_entry}{RESET}")
+                new_map_entry_7 = f"{ip} {threads_domain_batch[7]}"
+                cmd = f'echo "{new_map_entry_7}" | sudo tee -a /etc/hosts > /dev/null'
+                subprocess.run(cmd, shell=True, check=True)
+
+                new_map_entry_8 = f"{ip} {threads_domain_batch[8]}"
+                cmd = f'echo "{new_map_entry_8}" | sudo tee -a /etc/hosts > /dev/null'
+                subprocess.run(cmd, shell=True, check=True)
+
+                new_map_entry_9 = f"{ip} {threads_domain_batch[9]}"
+                cmd = f'echo "{new_map_entry_9}" | sudo tee -a /etc/hosts > /dev/null'
+                subprocess.run(cmd, shell=True, check=True)
+
+
+                def send_probe_requests(url):
+                    try:
+                        proxies = {"http": proxy_url, "https": proxy_url} if proxy_url else None
+                        headers = {
+                            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0"
+                        }
+
+                        # after done mapping all batch domains to current IP in /etc/hosts in the before logic, making an HTTP request to url provided to see if it succeeds.
+                        response = requests.get(url, timeout=req_timeout, proxies=proxies, verify=False, allow_redirects=False, headers=headers)
+                    # Handles all request failures
+                    except Exception as e:
+                        response = False
+
+                    parsed_url = urlparse(url)
+                    domain_part_of_url = parsed_url.netloc
+
+                    if response:
+                        # print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response}.{RESET}", f"Using one of the /etc/hosts mappings: {new_map_entry_0}, {new_map_entry_1}, {new_map_entry_2}, {new_map_entry_3}, {new_map_entry_4}, {new_map_entry_5}, {new_map_entry_6}, {new_map_entry_7}, {new_map_entry_8}, {new_map_entry_9}")
+                        print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response}.{RESET}", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}")
+                    else:
+                        # it will print request: having response 400, 500 response codes OR no response at all (in this case response = False)
+                        # print(f"{GRAY}Request failed for URL: {url} Response: {response}.{RESET}", f"{GRAY}Using one of the /etc/hosts mappings: {new_map_entry_0}, {new_map_entry_1}, {new_map_entry_2}, {new_map_entry_3}, {new_map_entry_4}, {new_map_entry_5}, {new_map_entry_6}, {new_map_entry_7}, {new_map_entry_8}, {new_map_entry_9}{RESET}")
+                        print(f"{GRAY}Request failed for URL: {url} Response: {response}.{RESET}", f"{GRAY}Using /etc/hosts mapping: {ip} {domain_part_of_url}{RESET}")
+                
+
+                ## threading for all 6 urls of a domain plus all 10 domains
+                def run_domain_probe(one_domain_in_batch):
+                    urls = [
+                        f"http://{one_domain_in_batch}",
+                        f"https://{one_domain_in_batch}",
+                        f"http://{one_domain_in_batch}:8443",
+                        f"https://{one_domain_in_batch}:8443",
+                        f"http://{one_domain_in_batch}:8080",
+                        f"https://{one_domain_in_batch}:8080"
+                    ]
+                    threading_threads = []
+                    for url in urls:
+                        t = threading.Thread(target=send_probe_requests, args=(url,))
+                        t.start()
+                        threading_threads.append(t)
+
+                    for t in threading_threads:
+                        t.join()
+
+                # Launch a probe thread for each domain in the batch
+                outer_threads = []
+
+                for one_domain_in_batch in threads_domain_batch:
+                    t = threading.Thread(target=run_domain_probe, args=(one_domain_in_batch,))
+                    t.start()
+                    outer_threads.append(t)
+
+                for t in outer_threads:
+                    t.join()
+
+
+                
+                ## only threading for all 6 urls of a domain
+                # for one_domain_in_batch in threads_domain_batch:
+                #     # we want the below lines to run simultanelously for all 10 domains in batch
+                #     urls = [
+                #         f"http://{one_domain_in_batch}",
+                #         f"https://{one_domain_in_batch}",
+                #         f"http://{one_domain_in_batch}:8443",
+                #         f"https://{one_domain_in_batch}:8443",
+                #         f"http://{one_domain_in_batch}:8080",
+                #         f"https://{one_domain_in_batch}:8080"
+                #     ]
+                #     # Send all 6 requests concurrently
+                #     threading_threads = []
+                #     for url in urls:
+                #         t = threading.Thread(target=send_probe_requests, args=(url,))
+                #         t.start()
+                #         threading_threads.append(t)
+
+                #     # Optional: wait for all to complete
+                #     for t in threading_threads:
+                #         t.join()
+
+
+
+            if threading_threads is None:
+                # Map each domain to every IP and replace last line each time
+                new_map_entry_0 = f"{ip} {domain}"
+
+                # after mapping current domain to current IP in /etc/hosts, making an HTTP request to current domain using different ports to see if it succeeds.
+                urls = [
+                    f"http://{domain}",
+                    f"https://{domain}",
+                    f"http://{domain}:8443",
+                    f"https://{domain}:8443",
+                    f"http://{domain}:8080",
+                    f"https://{domain}:8080"
+                ]
+
+                for url in urls:
+                    # Makes a GET request to current URL. Timeout is 10 seconds. Through the proxy if supplied in cli argument. Without SSL verification. Not following redirects.
+                    try:
+                        proxies = {"http": proxy_url, "https": proxy_url} if proxy_url else None
+                        headers = {
+                            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0"
+                        }
+
+                        #! always keep these lines right above the request so when threading is used, function called using one threads doesn't override the already running thread's /etc/hosts mapping entry
+                        # cmd = 'echo "" | sudo tee -a /etc/hosts > /dev/null'
+                        # subprocess.run(cmd, shell=True, check=True)
+                        # # print(f"🔄 Replacing /etc/hosts last line with: {new_entry}")
+                        # sed_cmd = f"$s/.*/{new_map_entry}/"
+                        # subprocess.run(["sudo", "sed", "-i", sed_cmd, "/etc/hosts"], check=True)  # `sudo sed -i '$s/.*/1.2.3.4 example.com/' /etc/hosts` edits the file in-place, '$' targets the last line, s/.*/.../ replaces the entire content of that line with your desired text.
+
+                        cmd = f'echo "{new_map_entry_0}" | sudo tee /etc/hosts > /dev/null'
+                        subprocess.run(cmd, shell=True, check=True)
+
+                        response = requests.get(url, timeout=req_timeout, proxies=proxies, verify=False, allow_redirects=False, headers=headers)
+                    # Handles all request failures
+                    except Exception as e:
+                        response = False
+
+                    if response:
+                        print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response}.{RESET}", f"Using /etc/hosts mapping: {new_map_entry_0}")
+                    else:
+                        # it will print request: having response 400, 500 response codes OR no response at all (in this case response = False)
+                        print(f"{GRAY}Request failed for URL: {url} Response: {response}.{RESET}", f"{GRAY}Using /etc/hosts mapping: {new_map_entry_0}{RESET}")
 
         except KeyboardInterrupt as e:
             print("\n⚠️ Interrupted by user. Restoring /etc/hosts from backup and Exiting.")
@@ -243,57 +357,7 @@ if __name__ == "__main__":
                     elif len(domain_batch) == 10:
                         to_check_left = False
                         # print("10 domains collected inside threads")  # for debugging
-                        t1 = threading.Thread(
-                            target=map_and_probe_domain,
-                            kwargs={'ip': ip, 'domain': domain_batch[0], 'req_timeout': timeout_value, 'proxy_url': proxy_url_value}
-                        )
-                        t2 = threading.Thread(
-                            target=map_and_probe_domain,
-                            kwargs={'ip': ip, 'domain': domain_batch[1], 'req_timeout': timeout_value, 'proxy_url': proxy_url_value}
-                        )
-                        t3 = threading.Thread(
-                            target=map_and_probe_domain,
-                            kwargs={'ip': ip, 'domain': domain_batch[2], 'req_timeout': timeout_value, 'proxy_url': proxy_url_value}
-                        )
-                        t4 = threading.Thread(
-                            target=map_and_probe_domain,
-                            kwargs={'ip': ip, 'domain': domain_batch[3], 'req_timeout': timeout_value, 'proxy_url': proxy_url_value}
-                        )
-                        t5 = threading.Thread(
-                            target=map_and_probe_domain,
-                            kwargs={'ip': ip, 'domain': domain_batch[4], 'req_timeout': timeout_value, 'proxy_url': proxy_url_value}
-                        )
-                        t6 = threading.Thread(
-                            target=map_and_probe_domain,
-                            kwargs={'ip': ip, 'domain': domain_batch[5], 'req_timeout': timeout_value, 'proxy_url': proxy_url_value}
-                        )
-                        t7 = threading.Thread(
-                            target=map_and_probe_domain,
-                            kwargs={'ip': ip, 'domain': domain_batch[6], 'req_timeout': timeout_value, 'proxy_url': proxy_url_value}
-                        )
-                        t8 = threading.Thread(
-                            target=map_and_probe_domain,
-                            kwargs={'ip': ip, 'domain': domain_batch[7], 'req_timeout': timeout_value, 'proxy_url': proxy_url_value}
-                        )
-                        t9 = threading.Thread(
-                            target=map_and_probe_domain,
-                            kwargs={'ip': ip, 'domain': domain_batch[8], 'req_timeout': timeout_value, 'proxy_url': proxy_url_value}
-                        )
-                        t10 = threading.Thread(
-                            target=map_and_probe_domain,
-                            kwargs={'ip': ip, 'domain': domain_batch[9], 'req_timeout': timeout_value, 'proxy_url': proxy_url_value}
-                        )
-
-                        t1.start()
-                        t2.start()
-                        t3.start()
-                        t4.start()
-                        t5.start()
-                        t6.start()
-                        t7.start()
-                        t8.start()
-                        t9.start()
-                        t10.start()
+                        map_and_probe_domain(ip=ip, domain=None, req_timeout=timeout_value, proxy_url=proxy_url_value, threading_threads=threads_value, threads_domain_batch=domain_batch)
 
                         # Reset batch
                         domain_batch = []
@@ -306,40 +370,3 @@ if __name__ == "__main__":
     if not dryrun_value:
         subprocess.run(["sudo", "cp", "/etc/hosts.bak", "/etc/hosts"], check=True)
         subprocess.run(["sudo", "rm", "/etc/hosts.bak"], check=True)
-
-                    # try:
-                    #     tasks = [(ip, domain) for ip in ips for domain in domains]
-
-                    #     threads_list = []
-                    #     batch = []
-                    #     batch_size = threads_value  # --threads option from cli adjusts this
-
-                    #     for i, (ip, domain) in enumerate(tasks):
-                    #         t = threading.Thread(
-                    #             target=map_and_probe_domain,
-                    #             kwargs={'ip': ip, 'domain': domain, 'req_timeout': timeout_value, 'proxy_url': proxy_url_value}
-                    #         )
-
-                    #         threads_list.append(t)
-                    #         t.start()
-                    #         batch.append(t)
-
-                    #         # If the batch is full, join all threads before proceeding
-                    #         if len(batch) == batch_size:
-                    #             for t in batch:
-                    #                 t.join()
-                    #             batch.clear()
-
-                    #     # 👇 Join any remaining threads (last incomplete batch)
-                    #     for t in batch:
-                    #         t.join()
-                    # except KeyboardInterrupt as e:
-                    #     print("\n⚠️ Interrupted by user. Restoring /etc/hosts from backup and Exiting.")
-
-                    #     # Gracefully exits the tool on ctrl + c. Restores original /etc/hosts file from backup and deletes the backup before exiting.
-                    #     print("♻️ Restoring original /etc/hosts from backup")
-                    #     subprocess.run(["sudo", "cp", "/etc/hosts.bak", "/etc/hosts"], check=True)
-                    #     subprocess.run(["sudo", "rm", "/etc/hosts.bak"], check=True)
-                    #     print("✅ /etc/hosts restored from backup")
-                    #     sys.exit(0)
-
