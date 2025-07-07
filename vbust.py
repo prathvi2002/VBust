@@ -31,7 +31,7 @@ else:
     RESET = "\033[0m"
 
 
-def map_and_probe_domain(ip, req_timeout, domain=None, proxy_url=None, threading_threads=None, threads_domain_batch=None):
+def map_and_probe_domain(ip, req_timeout, domain=None, proxy_url=None, threading_threads=None, threads_domain_batch=None, success_codes=None):
     try:
         # It clears the DNS cache maintained by systemd-resolved, forcing fresh lookups for future DNS queries. (idk if my wsl Ubuntu is using systemd-resolved for DNS resolution but still adding it here in case it is using it). even if dns is maintained by systemd-resolved we are editing /etc/hosts and maybe /etc/hosts is the file which is check the first for dns, i am being paranoid that's why flushing dns
         subprocess.run("sudo resolvectl flush-caches", shell=True, check=True)
@@ -67,14 +67,17 @@ def map_and_probe_domain(ip, req_timeout, domain=None, proxy_url=None, threading
                     domain_part_of_url = parsed_url.netloc
 
                     if response is not False:
+                        # it will print request: having response 2xx, 3xx response codes
                         if response:
-                            # print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response}.{RESET}", f"Using one of the /etc/hosts mappings: {new_map_entry_0}, {new_map_entry_1}, {new_map_entry_2}, {new_map_entry_3}, {new_map_entry_4}, {new_map_entry_5}, {new_map_entry_6}, {new_map_entry_7}, {new_map_entry_8}, {new_map_entry_9}")
                             print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response}.{RESET}", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}")
-                        elif response.status_code == 404:
+                        # it will print request: having any response code amoung the ones/one specified using --success in cli. if in cli --success option is not used, this elif statement won't be executed.
+                        elif (success_codes is not None) and (response.status_code in success_codes):
                             print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response}.{RESET}", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}")
+                        # it will print request: having response 4xx, 5xx response codes, unless any of them is specified using --success in cli (the response codes in 4xx, 5xx range specified using --success will be printed in the above elif statment)
+                        else:
+                            print(f"{GRAY}Request failed for URL: {url} Response: {response}.{RESET}", f"{GRAY}Using /etc/hosts mapping: {ip} {domain_part_of_url}{RESET}")
+                    # it will print request: having no response at all (in this case response = False)
                     else:
-                        # it will print request: having response 400, 500 response codes OR no response at all (in this case response = False)
-                        # print(f"{GRAY}Request failed for URL: {url} Response: {response}.{RESET}", f"{GRAY}Using one of the /etc/hosts mappings: {new_map_entry_0}, {new_map_entry_1}, {new_map_entry_2}, {new_map_entry_3}, {new_map_entry_4}, {new_map_entry_5}, {new_map_entry_6}, {new_map_entry_7}, {new_map_entry_8}, {new_map_entry_9}{RESET}")
                         print(f"{GRAY}Request failed for URL: {url} Response: {response}.{RESET}", f"{GRAY}Using /etc/hosts mapping: {ip} {domain_part_of_url}{RESET}")
                 
 
@@ -160,12 +163,17 @@ def map_and_probe_domain(ip, req_timeout, domain=None, proxy_url=None, threading
                         response = False
 
                     if response is not False:
+                        # it will print request: having response 2xx, 3xx response codes
                         if response:
                             print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response}.{RESET}", f"Using /etc/hosts mapping: {new_map_entry}")
-                        elif response.status_code == 404:
+                        # it will print request: having any response code amoung the ones/one specified using --success in cli. if in cli --success option is not used, this elif statement won't be executed.
+                        elif (response is not None) and (response.status_code in success_codes):
                             print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response}.{RESET}", f"Using /etc/hosts mapping: {ip} {new_map_entry}")
+                        # it will print request: having response 4xx, 5xx response codes, unless any of them is specified using --success in cli (the response codes in 4xx, 5xx range specified using --success will be printed in the above elif statment)
+                        else:
+                            print(f"{GRAY}Request failed for URL: {url} Response: {response}.{RESET}", f"{GRAY}Using /etc/hosts mapping: {ip} {new_map_entry}{RESET}")
+                    # it will print request: having no response at all (in this case response = False)
                     else:
-                        # it will print request: having response 400, 500 response codes OR no response at all (in this case response = False)
                         print(f"{GRAY}Request failed for URL: {url} Response: {response}.{RESET}", f"{GRAY}Using /etc/hosts mapping: {new_map_entry}{RESET}")
 
         except KeyboardInterrupt as e:
@@ -218,12 +226,6 @@ if __name__ == "__main__":
         action="store_true",
         help="Preview which IP/domain mapping would be tried, without modifying anything or sending any request. (default: False)"
     )
-    # parser.add_argument(
-    #     "--threads",
-    #     default=None,
-    #     action="store_true",
-    #     help="Use threads to process 10 ip-domain mappings and common ports for each of those mappings at a time."
-    # )
     parser.add_argument(
         "--threads",
         type=int,
@@ -236,6 +238,13 @@ if __name__ == "__main__":
         default=5,
         help="Request timeout in seconds (default: 5)"
     )
+    parser.add_argument(
+        "--success",
+        nargs="+",
+        type=int,
+        default=None,
+        help="In addition to 2xx and 3xx, these response codes will be treated as successful responses. Example: --success 404 403"
+    )
 
     # Parse the arguments
     args = parser.parse_args()
@@ -247,6 +256,7 @@ if __name__ == "__main__":
     dryrun_value = args.dryrun
     threads_value = args.threads
     timeout_value = args.timeout
+    success_value = args.success  # containing a list of all numbers (type int) provided via --success CLI arg
     if args.nocolour:
         nocolour_value = True
     else:
@@ -307,7 +317,7 @@ if __name__ == "__main__":
             else:
                 # if --threads option is not used 
                 if threads_value is None:
-                    map_and_probe_domain(ip=ip, domain=domain, req_timeout=timeout_value, proxy_url=proxy_url_value)
+                    map_and_probe_domain(ip=ip, domain=domain, req_timeout=timeout_value, proxy_url=proxy_url_value, success_codes=success_value)
 
                 # if --threads option is used 
                 else:
@@ -323,7 +333,7 @@ if __name__ == "__main__":
                     elif len(domain_batch) == threads_value:
                         to_check_left = False
                         # print("10 domains collected inside threads")  # for debugging
-                        map_and_probe_domain(ip=ip, domain=None, req_timeout=timeout_value, proxy_url=proxy_url_value, threading_threads=True, threads_domain_batch=domain_batch)
+                        map_and_probe_domain(ip=ip, domain=None, req_timeout=timeout_value, proxy_url=proxy_url_value, threading_threads=True, threads_domain_batch=domain_batch, success_codes=success_value)
 
                         # Reset batch
                         domain_batch = []
@@ -366,14 +376,17 @@ if __name__ == "__main__":
                 domain_part_of_url = parsed_url.netloc
 
                 if response is not False:
+                    # it will print request: having response 2xx, 3xx response codes
                     if response:
-                        # print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response}.{RESET}", f"Using one of the /etc/hosts mappings: {new_map_entry_0}, {new_map_entry_1}, {new_map_entry_2}, {new_map_entry_3}, {new_map_entry_4}, {new_map_entry_5}, {new_map_entry_6}, {new_map_entry_7}, {new_map_entry_8}, {new_map_entry_9}")
                         print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response}.{RESET}", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}")
-                    elif response.status_code == 404:
+                    # it will print request: having any response code amoung the ones/one specified using --success in cli. if in cli --success option is not used, this elif statement won't be executed.
+                    elif (success_value is not None) and (response.status_code in success_value):
                         print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response}.{RESET}", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}")
+                    # it will print request: having response 4xx, 5xx response codes, unless any of them is specified using --success in cli (the response codes in 4xx, 5xx range specified using --success will be printed in the above elif statment)
+                    else:
+                        print(f"{GRAY}Request failed for URL: {url} Response: {response}.{RESET}", f"{GRAY}Using /etc/hosts mapping: {ip} {domain_part_of_url}{RESET}")
+                # it will print request: having no response at all (in this case response = False)
                 else:
-                    # it will print request: having response 400, 500 response codes OR no response at all (in this case response = False)
-                    # print(f"{GRAY}Request failed for URL: {url} Response: {response}.{RESET}", f"{GRAY}Using one of the /etc/hosts mappings: {new_map_entry_0}, {new_map_entry_1}, {new_map_entry_2}, {new_map_entry_3}, {new_map_entry_4}, {new_map_entry_5}, {new_map_entry_6}, {new_map_entry_7}, {new_map_entry_8}, {new_map_entry_9}{RESET}")
                     print(f"{GRAY}Request failed for URL: {url} Response: {response}.{RESET}", f"{GRAY}Using /etc/hosts mapping: {ip} {domain_part_of_url}{RESET}")
             
 
