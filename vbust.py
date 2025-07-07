@@ -66,9 +66,12 @@ def map_and_probe_domain(ip, req_timeout, domain=None, proxy_url=None, threading
                     parsed_url = urlparse(url)
                     domain_part_of_url = parsed_url.netloc
 
-                    if response:
-                        # print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response}.{RESET}", f"Using one of the /etc/hosts mappings: {new_map_entry_0}, {new_map_entry_1}, {new_map_entry_2}, {new_map_entry_3}, {new_map_entry_4}, {new_map_entry_5}, {new_map_entry_6}, {new_map_entry_7}, {new_map_entry_8}, {new_map_entry_9}")
-                        print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response}.{RESET}", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}")
+                    if response is not False:
+                        if response:
+                            # print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response}.{RESET}", f"Using one of the /etc/hosts mappings: {new_map_entry_0}, {new_map_entry_1}, {new_map_entry_2}, {new_map_entry_3}, {new_map_entry_4}, {new_map_entry_5}, {new_map_entry_6}, {new_map_entry_7}, {new_map_entry_8}, {new_map_entry_9}")
+                            print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response}.{RESET}", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}")
+                        elif response.status_code == 404:
+                            print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response}.{RESET}", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}")
                     else:
                         # it will print request: having response 400, 500 response codes OR no response at all (in this case response = False)
                         # print(f"{GRAY}Request failed for URL: {url} Response: {response}.{RESET}", f"{GRAY}Using one of the /etc/hosts mappings: {new_map_entry_0}, {new_map_entry_1}, {new_map_entry_2}, {new_map_entry_3}, {new_map_entry_4}, {new_map_entry_5}, {new_map_entry_6}, {new_map_entry_7}, {new_map_entry_8}, {new_map_entry_9}{RESET}")
@@ -156,8 +159,11 @@ def map_and_probe_domain(ip, req_timeout, domain=None, proxy_url=None, threading
                     except Exception as e:
                         response = False
 
-                    if response:
-                        print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response}.{RESET}", f"Using /etc/hosts mapping: {new_map_entry}")
+                    if response is not False:
+                        if response:
+                            print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response}.{RESET}", f"Using /etc/hosts mapping: {new_map_entry}")
+                        elif response.status_code == 404:
+                            print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response}.{RESET}", f"Using /etc/hosts mapping: {ip} {new_map_entry}")
                     else:
                         # it will print request: having response 400, 500 response codes OR no response at all (in this case response = False)
                         print(f"{GRAY}Request failed for URL: {url} Response: {response}.{RESET}", f"{GRAY}Using /etc/hosts mapping: {new_map_entry}{RESET}")
@@ -359,9 +365,12 @@ if __name__ == "__main__":
                 parsed_url = urlparse(url)
                 domain_part_of_url = parsed_url.netloc
 
-                if response:
-                    # print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response}.{RESET}", f"Using one of the /etc/hosts mappings: {new_map_entry_0}, {new_map_entry_1}, {new_map_entry_2}, {new_map_entry_3}, {new_map_entry_4}, {new_map_entry_5}, {new_map_entry_6}, {new_map_entry_7}, {new_map_entry_8}, {new_map_entry_9}")
-                    print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response}.{RESET}", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}")
+                if response is not False:
+                    if response:
+                        # print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response}.{RESET}", f"Using one of the /etc/hosts mappings: {new_map_entry_0}, {new_map_entry_1}, {new_map_entry_2}, {new_map_entry_3}, {new_map_entry_4}, {new_map_entry_5}, {new_map_entry_6}, {new_map_entry_7}, {new_map_entry_8}, {new_map_entry_9}")
+                        print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response}.{RESET}", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}")
+                    elif response.status_code == 404:
+                        print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response}.{RESET}", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}")
                 else:
                     # it will print request: having response 400, 500 response codes OR no response at all (in this case response = False)
                     # print(f"{GRAY}Request failed for URL: {url} Response: {response}.{RESET}", f"{GRAY}Using one of the /etc/hosts mappings: {new_map_entry_0}, {new_map_entry_1}, {new_map_entry_2}, {new_map_entry_3}, {new_map_entry_4}, {new_map_entry_5}, {new_map_entry_6}, {new_map_entry_7}, {new_map_entry_8}, {new_map_entry_9}{RESET}")
