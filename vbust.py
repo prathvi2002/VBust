@@ -89,7 +89,14 @@ def map_and_probe_domain(ip, req_timeout, domain=None, proxy_url=None, threading
                         f"http://{one_domain_in_batch}:8443",
                         f"https://{one_domain_in_batch}:8443",
                         f"http://{one_domain_in_batch}:8080",
-                        f"https://{one_domain_in_batch}:8080"
+                        f"https://{one_domain_in_batch}:8080",
+
+                        f"http://{one_domain_in_batch}/",
+                        f"https://{one_domain_in_batch}/",
+                        f"http://{one_domain_in_batch}:8443/",
+                        f"https://{one_domain_in_batch}:8443/",
+                        f"http://{one_domain_in_batch}:8080/",
+                        f"https://{one_domain_in_batch}:8080/"
                     ]
                     threading_threads = []
                     for url in urls:
@@ -151,7 +158,14 @@ def map_and_probe_domain(ip, req_timeout, domain=None, proxy_url=None, threading
                     f"http://{domain}:8443",
                     f"https://{domain}:8443",
                     f"http://{domain}:8080",
-                    f"https://{domain}:8080"
+                    f"https://{domain}:8080",
+
+                    f"http://{domain}/",
+                    f"https://{domain}/",
+                    f"http://{domain}:8443/",
+                    f"https://{domain}:8443/",
+                    f"http://{domain}:8080/",
+                    f"https://{domain}:8080/"
                 ]
 
                 for url in urls:
@@ -399,6 +413,13 @@ if __name__ == "__main__":
                     f"https://{one_domain_in_batch}:8443",
                     f"http://{one_domain_in_batch}:8080",
                     f"https://{one_domain_in_batch}:8080"
+
+                    f"http://{one_domain_in_batch}/",
+                    f"https://{one_domain_in_batch}/",
+                    f"http://{one_domain_in_batch}:8443/",
+                    f"https://{one_domain_in_batch}:8443/",
+                    f"http://{one_domain_in_batch}:8080/",
+                    f"https://{one_domain_in_batch}:8080/"
                 ]
                 threading_threads = []
                 for url in urls:
