@@ -305,8 +305,8 @@ if __name__ == "__main__":
 
                 # if --threads option is used 
                 else:
-                    if threads_value > 100:
-                        print("For reliable results thread count capped at 100.")
+                    if threads_value >= 100:  #! for some reason when using 100 threads only the last ip in the ip.txt provided is used, but when 99 or lower thread numbers are used all ips in the ip.txt are used
+                        print("For reliable results thread count capped at 99.")
                         sys.exit(1)
                     # print("--threads being used")
                     domain_batch.append(domain)
