@@ -13,5 +13,4 @@ Because web servers can host multiple websites from one server when a website is
 - Do not run more than one instance of VBust simultaneously because it modifies `/etc/hosts`, and concurrent edits can interfere with each other.
 - Windows etc hosts file `C:\Windows\System32\drivers\etc\hosts` affects wsl Ubuntu too, but wsl Ubuntu's `/etc/hosts` file does not affect Windows.
 - To filter out IP–domain mappings that received no response at all, you can pipe the output through: `grep -v "Response: False"`
-- If the domain list contains fewer than 10 entries, threading will not be used even if the `--threads` option is used.
 - To send all requests for all common ports for each IP-domain mapping at once without using threading, set `--threads` to `1` (e.g. `--threads 1`). [At the code level, this still triggers the threaded path written when `--threads` option is used in cli]
