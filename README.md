@@ -11,6 +11,7 @@ Because web servers can host multiple websites from one server when a website is
 - Avoid using a proxy on ports 80, 443, 8080, or 8443 when running VBust, or it can cause False positives.
 - Don't use Burp Suite as a proxy to proxy requests, it causes incorrect results. Use mitmproxy instead.
 - Do not run more than one instance of VBust simultaneously because it modifies `/etc/hosts`, and concurrent edits can interfere with each other.
+- Sometimes, when piping VBust’s output to `grep`, you may encounter the error `grep: (standard input): binary file matches`. To avoid this, always use the `-a` flag, which tells `grep` to treat binary input as text which will fix the error.
+- To filter out IP–domain mappings that received no response at all, you can pipe the output through: `grep -a -v "Response: False"`
 - Windows etc hosts file `C:\Windows\System32\drivers\etc\hosts` affects wsl Ubuntu too, but wsl Ubuntu's `/etc/hosts` file does not affect Windows.
-- To filter out IP–domain mappings that received no response at all, you can pipe the output through: `grep -v "Response: False"`
 - To send all requests for all common ports for each IP-domain mapping at once without using threading, set `--threads` to `1` (e.g. `--threads 1`). [At the code level, this still triggers the threaded path written when `--threads` option is used in cli]

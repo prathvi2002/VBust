@@ -2,7 +2,6 @@ inc-cf.latam-pe.saea1.aws.indriverapp.com
 co-cf.latam.saea1.aws.indriverapp.com
 pr.latam.saea1.aws.indriverapp.com
 taxiparks-rc.fr1.baremetal.indriverapp.com
-example-1.com
 frontend-safety-management-system.eu-east-1.indriverapp.com
 in.sea.apse3.aws.indriverapp.com
 dh.mena.meso1.aws.indriverapp.com
