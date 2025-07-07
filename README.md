@@ -17,3 +17,4 @@ Run `sudo chmod 666 /etc/hosts` on you linux machine when VBust is ran for the f
 - To filter out IP–domain mappings that received no response at all, you can pipe the output through: `grep -a -v "Response: False"`
 - Windows etc hosts file `C:\Windows\System32\drivers\etc\hosts` affects wsl Ubuntu too, but wsl Ubuntu's `/etc/hosts` file does not affect Windows.
 - To send all requests for all common ports for each IP-domain mapping at once without using threading, set `--threads` to `1` (e.g. `--threads 1`). [At the code level, this still triggers the threaded path written when `--threads` option is used in cli]
+- If the total output of `--dryrun` doesn’t match the expected count (i.e. number of IPs × number of domains), it likely means one or more IPs in the provided `--ips` file are invalid and were excluded by VBust
