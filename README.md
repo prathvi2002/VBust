@@ -14,5 +14,4 @@ Because web servers can host multiple websites from one server when a website is
 - Windows etc hosts file `C:\Windows\System32\drivers\etc\hosts` affects wsl Ubuntu too, but wsl Ubuntu's `/etc/hosts` file does not affect Windows.
 - To filter out IP–domain mappings that received no response at all, you can pipe the output through: `grep -v "Response: False"`
 - If the domain list contains fewer than 10 entries, threading will not be used even if the `--threads` option is used.
-- If you want to send all requests for all common ports for a single ip-domain mapping without using threading only specify `1` and use --threads e.g. --threads 1
 - To send all requests for all common ports for each IP-domain mapping at once without using threading, set `--threads` to `1` (e.g. `--threads 1`). [At the code level, this still triggers the threaded path written when `--threads` option is used in cli]
