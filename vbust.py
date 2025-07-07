@@ -49,45 +49,10 @@ def map_and_probe_domain(ip, req_timeout, domain=None, proxy_url=None, threading
                 subprocess.run(cmd, shell=True, check=True)
 
                 # Map each domain to every IP and add it to last line each time (for each domain in the 10 domains batch by appending to /etc/hosts)
-                new_map_entry_0 = f"{ip} {threads_domain_batch[0]}"
-                cmd = f'echo "{new_map_entry_0}" | sudo tee -a /etc/hosts > /dev/null'
-                subprocess.run(cmd, shell=True, check=True)
-
-                new_map_entry_1 = f"{ip} {threads_domain_batch[1]}"
-                cmd = f'echo "{new_map_entry_1}" | sudo tee -a /etc/hosts > /dev/null'
-                subprocess.run(cmd, shell=True, check=True)
-
-                new_map_entry_2 = f"{ip} {threads_domain_batch[2]}"
-                cmd = f'echo "{new_map_entry_2}" | sudo tee -a /etc/hosts > /dev/null'
-                subprocess.run(cmd, shell=True, check=True)
-
-                new_map_entry_3 = f"{ip} {threads_domain_batch[3]}"
-                cmd = f'echo "{new_map_entry_3}" | sudo tee -a /etc/hosts > /dev/null'
-                subprocess.run(cmd, shell=True, check=True)
-
-                new_map_entry_4 = f"{ip} {threads_domain_batch[4]}"
-                cmd = f'echo "{new_map_entry_4}" | sudo tee -a /etc/hosts > /dev/null'
-                subprocess.run(cmd, shell=True, check=True)
-
-                new_map_entry_5 = f"{ip} {threads_domain_batch[5]}"
-                cmd = f'echo "{new_map_entry_5}" | sudo tee -a /etc/hosts > /dev/null'
-                subprocess.run(cmd, shell=True, check=True)
-
-                new_map_entry_6 = f"{ip} {threads_domain_batch[6]}"
-                cmd = f'echo "{new_map_entry_6}" | sudo tee -a /etc/hosts > /dev/null'
-                subprocess.run(cmd, shell=True, check=True)
-
-                new_map_entry_7 = f"{ip} {threads_domain_batch[7]}"
-                cmd = f'echo "{new_map_entry_7}" | sudo tee -a /etc/hosts > /dev/null'
-                subprocess.run(cmd, shell=True, check=True)
-
-                new_map_entry_8 = f"{ip} {threads_domain_batch[8]}"
-                cmd = f'echo "{new_map_entry_8}" | sudo tee -a /etc/hosts > /dev/null'
-                subprocess.run(cmd, shell=True, check=True)
-
-                new_map_entry_9 = f"{ip} {threads_domain_batch[9]}"
-                cmd = f'echo "{new_map_entry_9}" | sudo tee -a /etc/hosts > /dev/null'
-                subprocess.run(cmd, shell=True, check=True)
+                with open("/etc/hosts", "a") as hosts_file:
+                    for domain in threads_domain_batch:
+                        entry = f"{ip} {domain}\n"
+                        hosts_file.write(entry)
 
 
                 def send_probe_requests(url):
@@ -247,11 +212,17 @@ if __name__ == "__main__":
         action="store_true",
         help="Preview which IP/domain mapping would be tried, without modifying anything or sending any request. (default: False)"
     )
+    # parser.add_argument(
+    #     "--threads",
+    #     default=None,
+    #     action="store_true",
+    #     help="Use threads to process 10 ip-domain mappings and common ports for each of those mappings at a time."
+    # )
     parser.add_argument(
         "--threads",
+        type=int,
         default=None,
-        action="store_true",
-        help="Use threads to process 10 ip-domain mappings and common ports for each of those mappings at a time."
+        help="Process this number of ip-domain mappings and common ports for each of those mappings at a time."
     )
     parser.add_argument(
         "--timeout",
@@ -334,23 +305,108 @@ if __name__ == "__main__":
 
                 # if --threads option is used 
                 else:
+                    if threads_value > 100:
+                        print("For reliable results thread count capped at 100.")
+                        sys.exit(1)
                     # print("--threads being used")
                     domain_batch.append(domain)
-                    if len(domain_batch) != 10:
+                    if len(domain_batch) != threads_value:
                         to_check_left = True
                         continue
-                    # Once we collect 10 domains, start 10 threads
-                    elif len(domain_batch) == 10:
+                    # Once we collect thread number of domains, start that many threads
+                    elif len(domain_batch) == threads_value:
                         to_check_left = False
                         # print("10 domains collected inside threads")  # for debugging
-                        map_and_probe_domain(ip=ip, domain=None, req_timeout=timeout_value, proxy_url=proxy_url_value, threading_threads=threads_value, threads_domain_batch=domain_batch)
+                        map_and_probe_domain(ip=ip, domain=None, req_timeout=timeout_value, proxy_url=proxy_url_value, threading_threads=True, threads_domain_batch=domain_batch)
 
                         # Reset batch
                         domain_batch = []
 
     if domain_batch and (to_check_left is True):
-        for d in domain_batch:
-            map_and_probe_domain(ip=ip, domain=d, req_timeout=timeout_value, proxy_url=proxy_url_value)
+        # for d in domain_batch:
+        #     # map_and_probe_domain(ip=ip, domain=d, req_timeout=timeout_value, proxy_url=proxy_url_value)
+        #     map_and_probe_domain(ip=ip, domain=d, req_timeout=timeout_value, proxy_url=proxy_url_value, threading_threads=threads_value, threads_domain_batch=domain_batch)
+
+        # It clears the DNS cache maintained by systemd-resolved, forcing fresh lookups for future DNS queries. (idk if my wsl Ubuntu is using systemd-resolved for DNS resolution but still adding it here in case it is using it). even if dns is maintained by systemd-resolved we are editing /etc/hosts and maybe /etc/hosts is the file which is check the first for dns, i am being paranoid that's why flushing dns
+        subprocess.run("sudo resolvectl flush-caches", shell=True, check=True)
+        # # Map each domain to every IP and make a request
+        try:
+            proxies = {"http": proxy_url_value, "https": proxy_url_value} if proxy_url_value else None
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0"
+            }
+
+            # Initialize the mapping for this domain batch by cleaning any existing mapping in /etc/hosts
+            new_map_entry_init = ""
+            cmd = f'echo "{new_map_entry_init}" | sudo tee /etc/hosts > /dev/null'
+            subprocess.run(cmd, shell=True, check=True)
+
+            # Map each domain to every IP and add it to last line each time (for each domain in the 10 domains batch by appending to /etc/hosts)
+            with open("/etc/hosts", "a") as hosts_file:
+                for domain in domain_batch:
+                    entry = f"{ip} {domain}\n"
+                    hosts_file.write(entry)
+
+
+            def send_probe_requests(url):
+                try:
+                    # after done mapping all batch domains to current IP in /etc/hosts in the before logic, making an HTTP request to url provided to see if it succeeds.
+                    response = requests.get(url, timeout=timeout_value, proxies=proxies, verify=False, allow_redirects=False, headers=headers)
+                # Handles all request failures
+                except Exception as e:
+                    response = False
+
+                parsed_url = urlparse(url)
+                domain_part_of_url = parsed_url.netloc
+
+                if response:
+                    # print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response}.{RESET}", f"Using one of the /etc/hosts mappings: {new_map_entry_0}, {new_map_entry_1}, {new_map_entry_2}, {new_map_entry_3}, {new_map_entry_4}, {new_map_entry_5}, {new_map_entry_6}, {new_map_entry_7}, {new_map_entry_8}, {new_map_entry_9}")
+                    print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response}.{RESET}", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}")
+                else:
+                    # it will print request: having response 400, 500 response codes OR no response at all (in this case response = False)
+                    # print(f"{GRAY}Request failed for URL: {url} Response: {response}.{RESET}", f"{GRAY}Using one of the /etc/hosts mappings: {new_map_entry_0}, {new_map_entry_1}, {new_map_entry_2}, {new_map_entry_3}, {new_map_entry_4}, {new_map_entry_5}, {new_map_entry_6}, {new_map_entry_7}, {new_map_entry_8}, {new_map_entry_9}{RESET}")
+                    print(f"{GRAY}Request failed for URL: {url} Response: {response}.{RESET}", f"{GRAY}Using /etc/hosts mapping: {ip} {domain_part_of_url}{RESET}")
+            
+
+            ## threading for all 6 urls of a domain plus all 10 domains
+            def run_domain_probe(one_domain_in_batch):
+                urls = [
+                    f"http://{one_domain_in_batch}",
+                    f"https://{one_domain_in_batch}",
+                    f"http://{one_domain_in_batch}:8443",
+                    f"https://{one_domain_in_batch}:8443",
+                    f"http://{one_domain_in_batch}:8080",
+                    f"https://{one_domain_in_batch}:8080"
+                ]
+                threading_threads = []
+                for url in urls:
+                    t = threading.Thread(target=send_probe_requests, args=(url,))
+                    t.start()
+                    threading_threads.append(t)
+
+                for t in threading_threads:
+                    t.join()
+
+            # Launch a probe thread for each domain in the batch
+            outer_threads = []
+
+            for one_domain_in_batch in domain_batch:
+                t = threading.Thread(target=run_domain_probe, args=(one_domain_in_batch,))
+                t.start()
+                outer_threads.append(t)
+
+            for t in outer_threads:
+                t.join()
+        except KeyboardInterrupt as e:
+            print("\n⚠️ Interrupted by user. Restoring /etc/hosts from backup and Exiting.")
+
+            # Gracefully exits the tool on ctrl + c. Restores original /etc/hosts file from backup and deletes the backup before exiting.
+            print("♻️ Restoring original /etc/hosts from backup")
+            subprocess.run(["sudo", "cp", "/etc/hosts.bak", "/etc/hosts"], check=True)
+            subprocess.run(["sudo", "rm", "/etc/hosts.bak"], check=True)
+            print("✅ /etc/hosts restored from backup")
+            sys.exit(0)
+
 
     # Restores original /etc/hosts file from backup and deletes the backup after done with every single ip and domain (if --dryrun is not used in cli)
     if not dryrun_value:
