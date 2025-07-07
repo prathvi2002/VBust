@@ -352,103 +352,103 @@ if __name__ == "__main__":
                         # Reset batch
                         domain_batch = []
 
-    if domain_batch and (to_check_left is True):
-        # for d in domain_batch:
-        #     # map_and_probe_domain(ip=ip, domain=d, req_timeout=timeout_value, proxy_url=proxy_url_value)
-        #     map_and_probe_domain(ip=ip, domain=d, req_timeout=timeout_value, proxy_url=proxy_url_value, threading_threads=threads_value, threads_domain_batch=domain_batch)
+        if domain_batch and (to_check_left is True):
+            # for d in domain_batch:
+            #     # map_and_probe_domain(ip=ip, domain=d, req_timeout=timeout_value, proxy_url=proxy_url_value)
+            #     map_and_probe_domain(ip=ip, domain=d, req_timeout=timeout_value, proxy_url=proxy_url_value, threading_threads=threads_value, threads_domain_batch=domain_batch)
 
-        # It clears the DNS cache maintained by systemd-resolved, forcing fresh lookups for future DNS queries. (idk if my wsl Ubuntu is using systemd-resolved for DNS resolution but still adding it here in case it is using it). even if dns is maintained by systemd-resolved we are editing /etc/hosts and maybe /etc/hosts is the file which is check the first for dns, i am being paranoid that's why flushing dns
-        subprocess.run("sudo resolvectl flush-caches", shell=True, check=True)
-        # # Map each domain to every IP and make a request
-        try:
-            proxies = {"http": proxy_url_value, "https": proxy_url_value} if proxy_url_value else None
-            headers = {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0"
-            }
+            # It clears the DNS cache maintained by systemd-resolved, forcing fresh lookups for future DNS queries. (idk if my wsl Ubuntu is using systemd-resolved for DNS resolution but still adding it here in case it is using it). even if dns is maintained by systemd-resolved we are editing /etc/hosts and maybe /etc/hosts is the file which is check the first for dns, i am being paranoid that's why flushing dns
+            subprocess.run("sudo resolvectl flush-caches", shell=True, check=True)
+            # # Map each domain to every IP and make a request
+            try:
+                proxies = {"http": proxy_url_value, "https": proxy_url_value} if proxy_url_value else None
+                headers = {
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0"
+                }
 
-            # Initialize the mapping for this domain batch by cleaning any existing mapping in /etc/hosts
-            new_map_entry_init = ""
-            cmd = f'echo "{new_map_entry_init}" | sudo tee /etc/hosts > /dev/null'
-            subprocess.run(cmd, shell=True, check=True)
+                # Initialize the mapping for this domain batch by cleaning any existing mapping in /etc/hosts
+                new_map_entry_init = ""
+                cmd = f'echo "{new_map_entry_init}" | sudo tee /etc/hosts > /dev/null'
+                subprocess.run(cmd, shell=True, check=True)
 
-            # Map each domain to every IP and add it to last line each time (for each domain in the 10 domains batch by appending to /etc/hosts)
-            with open("/etc/hosts", "a") as hosts_file:
-                for domain in domain_batch:
-                    entry = f"{ip} {domain}\n"
-                    hosts_file.write(entry)
+                # Map each domain to every IP and add it to last line each time (for each domain in the 10 domains batch by appending to /etc/hosts)
+                with open("/etc/hosts", "a") as hosts_file:
+                    for domain in domain_batch:
+                        entry = f"{ip} {domain}\n"
+                        hosts_file.write(entry)
 
 
-            def send_probe_requests(url):
-                try:
-                    # after done mapping all batch domains to current IP in /etc/hosts in the before logic, making an HTTP request to url provided to see if it succeeds.
-                    response = requests.get(url, timeout=timeout_value, proxies=proxies, verify=False, allow_redirects=False, headers=headers)
-                # Handles all request failures
-                except Exception as e:
-                    response = False
+                def send_probe_requests(url):
+                    try:
+                        # after done mapping all batch domains to current IP in /etc/hosts in the before logic, making an HTTP request to url provided to see if it succeeds.
+                        response = requests.get(url, timeout=timeout_value, proxies=proxies, verify=False, allow_redirects=False, headers=headers)
+                    # Handles all request failures
+                    except Exception as e:
+                        response = False
 
-                parsed_url = urlparse(url)
-                domain_part_of_url = parsed_url.netloc
+                    parsed_url = urlparse(url)
+                    domain_part_of_url = parsed_url.netloc
 
-                if response is not False:
-                    # it will print request: having response 2xx, 3xx response codes
-                    if response:
-                        print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response}.{RESET}", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}")
-                    # it will print request: having any response code amoung the ones/one specified using --success in cli. if in cli --success option is not used, this elif statement won't be executed.
-                    elif (success_value is not None) and (response.status_code in success_value):
-                        print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response}.{RESET}", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}")
-                    # it will print request: having response 4xx, 5xx response codes, unless any of them is specified using --success in cli (the response codes in 4xx, 5xx range specified using --success will be printed in the above elif statment)
+                    if response is not False:
+                        # it will print request: having response 2xx, 3xx response codes
+                        if response:
+                            print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response}.{RESET}", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}")
+                        # it will print request: having any response code amoung the ones/one specified using --success in cli. if in cli --success option is not used, this elif statement won't be executed.
+                        elif (success_value is not None) and (response.status_code in success_value):
+                            print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response}.{RESET}", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}")
+                        # it will print request: having response 4xx, 5xx response codes, unless any of them is specified using --success in cli (the response codes in 4xx, 5xx range specified using --success will be printed in the above elif statment)
+                        else:
+                            print(f"{GRAY}Request failed for URL: {url} Response: {response}.{RESET}", f"{GRAY}Using /etc/hosts mapping: {ip} {domain_part_of_url}{RESET}")
+                    # it will print request: having no response at all (in this case response = False)
                     else:
                         print(f"{GRAY}Request failed for URL: {url} Response: {response}.{RESET}", f"{GRAY}Using /etc/hosts mapping: {ip} {domain_part_of_url}{RESET}")
-                # it will print request: having no response at all (in this case response = False)
-                else:
-                    print(f"{GRAY}Request failed for URL: {url} Response: {response}.{RESET}", f"{GRAY}Using /etc/hosts mapping: {ip} {domain_part_of_url}{RESET}")
-            
+                
 
-            ## threading for all 6 urls of a domain plus all 10 domains
-            def run_domain_probe(one_domain_in_batch):
-                urls = [
-                    f"http://{one_domain_in_batch}",
-                    f"https://{one_domain_in_batch}",
-                    f"http://{one_domain_in_batch}:8443",
-                    f"https://{one_domain_in_batch}:8443",
-                    f"http://{one_domain_in_batch}:8080",
-                    f"https://{one_domain_in_batch}:8080"
+                ## threading for all 6 urls of a domain plus all 10 domains
+                def run_domain_probe(one_domain_in_batch):
+                    urls = [
+                        f"http://{one_domain_in_batch}",
+                        f"https://{one_domain_in_batch}",
+                        f"http://{one_domain_in_batch}:8443",
+                        f"https://{one_domain_in_batch}:8443",
+                        f"http://{one_domain_in_batch}:8080",
+                        f"https://{one_domain_in_batch}:8080",
 
-                    f"http://{one_domain_in_batch}/",
-                    f"https://{one_domain_in_batch}/",
-                    f"http://{one_domain_in_batch}:8443/",
-                    f"https://{one_domain_in_batch}:8443/",
-                    f"http://{one_domain_in_batch}:8080/",
-                    f"https://{one_domain_in_batch}:8080/"
-                ]
-                threading_threads = []
-                for url in urls:
-                    t = threading.Thread(target=send_probe_requests, args=(url,))
+                        f"http://{one_domain_in_batch}/",
+                        f"https://{one_domain_in_batch}/",
+                        f"http://{one_domain_in_batch}:8443/",
+                        f"https://{one_domain_in_batch}:8443/",
+                        f"http://{one_domain_in_batch}:8080/",
+                        f"https://{one_domain_in_batch}:8080/"
+                    ]
+                    threading_threads = []
+                    for url in urls:
+                        t = threading.Thread(target=send_probe_requests, args=(url,))
+                        t.start()
+                        threading_threads.append(t)
+
+                    for t in threading_threads:
+                        t.join()
+
+                # Launch a probe thread for each domain in the batch
+                outer_threads = []
+
+                for one_domain_in_batch in domain_batch:
+                    t = threading.Thread(target=run_domain_probe, args=(one_domain_in_batch,))
                     t.start()
-                    threading_threads.append(t)
+                    outer_threads.append(t)
 
-                for t in threading_threads:
+                for t in outer_threads:
                     t.join()
+            except KeyboardInterrupt as e:
+                print("\n⚠️ Interrupted by user. Restoring /etc/hosts from backup and Exiting.")
 
-            # Launch a probe thread for each domain in the batch
-            outer_threads = []
-
-            for one_domain_in_batch in domain_batch:
-                t = threading.Thread(target=run_domain_probe, args=(one_domain_in_batch,))
-                t.start()
-                outer_threads.append(t)
-
-            for t in outer_threads:
-                t.join()
-        except KeyboardInterrupt as e:
-            print("\n⚠️ Interrupted by user. Restoring /etc/hosts from backup and Exiting.")
-
-            # Gracefully exits the tool on ctrl + c. Restores original /etc/hosts file from backup and deletes the backup before exiting.
-            print("♻️ Restoring original /etc/hosts from backup")
-            subprocess.run(["sudo", "cp", "/etc/hosts.bak", "/etc/hosts"], check=True)
-            subprocess.run(["sudo", "rm", "/etc/hosts.bak"], check=True)
-            print("✅ /etc/hosts restored from backup")
-            sys.exit(0)
+                # Gracefully exits the tool on ctrl + c. Restores original /etc/hosts file from backup and deletes the backup before exiting.
+                print("♻️ Restoring original /etc/hosts from backup")
+                subprocess.run(["sudo", "cp", "/etc/hosts.bak", "/etc/hosts"], check=True)
+                subprocess.run(["sudo", "rm", "/etc/hosts.bak"], check=True)
+                print("✅ /etc/hosts restored from backup")
+                sys.exit(0)
 
 
     # Restores original /etc/hosts file from backup and deletes the backup after done with every single ip and domain (if --dryrun is not used in cli)
