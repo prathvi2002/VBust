@@ -387,7 +387,7 @@ if __name__ == "__main__":
                         response = False
 
                     parsed_url = urlparse(url)
-                    domain_part_of_url = parsed_url.netloc
+                    domain_part_of_url = parsed_url.hostname
 
                     if response is not False:
                         # it will print request: having response 2xx, 3xx response codes
