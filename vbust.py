@@ -72,16 +72,16 @@ def map_and_probe_domain(ip, req_timeout, domain=None, proxy_url=None, threading
                     if response is not False:
                         # it will print request: having response 2xx, 3xx response codes
                         if response:
-                            print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response}.{RESET}", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}")
+                            print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response.status_code}.{RESET}", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}")
                         # it will print request: having any response code amoung the ones/one specified using --success in cli. if in cli --success option is not used, this elif statement won't be executed.
                         elif (success_codes is not None) and (response.status_code in success_codes):
-                            print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response}.{RESET}", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}")
+                            print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response.status_code}.{RESET}", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}")
                         # it will print request: having response 4xx, 5xx response codes, unless any of them is specified using --success in cli (the response codes in 4xx, 5xx range specified using --success will be printed in the above elif statment)
                         else:
-                            print(f"{GRAY}Request failed for URL: {url} Response: {response}.{RESET}", f"{GRAY}Using /etc/hosts mapping: {ip} {domain_part_of_url}{RESET}")
+                            print(f"{GRAY}Request failed for URL: {url} Response: {response.status_code}.{RESET}", f"{GRAY}Using /etc/hosts mapping: {ip} {domain_part_of_url}{RESET}")
                     # it will print request: having no response at all (in this case response = False)
                     else:
-                        print(f"{GRAY}Request failed for URL: {url} Response: {response}.{RESET}", f"{GRAY}Using /etc/hosts mapping: {ip} {domain_part_of_url}{RESET}")
+                        print(f"{GRAY}Request failed for URL: {url} Response: {response}.{RESET}", f"{GRAY}Using /etc/hosts mapping: {ip} {domain_part_of_url}{RESET}")  # here the response is going to be False, that's why not using response.status_code
                 
 
                 ## threading for all 6 urls of a domain plus all 10 domains
@@ -182,16 +182,16 @@ def map_and_probe_domain(ip, req_timeout, domain=None, proxy_url=None, threading
                     if response is not False:
                         # it will print request: having response 2xx, 3xx response codes
                         if response:
-                            print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response}.{RESET}", f"Using /etc/hosts mapping: {new_map_entry}")
+                            print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response.status_code}.{RESET}", f"Using /etc/hosts mapping: {new_map_entry}")
                         # it will print request: having any response code amoung the ones/one specified using --success in cli. if in cli --success option is not used, this elif statement won't be executed.
                         elif (response is not None) and (response.status_code in success_codes):
-                            print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response}.{RESET}", f"Using /etc/hosts mapping: {ip} {new_map_entry}")
+                            print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response.status_code}.{RESET}", f"Using /etc/hosts mapping: {ip} {new_map_entry}")
                         # it will print request: having response 4xx, 5xx response codes, unless any of them is specified using --success in cli (the response codes in 4xx, 5xx range specified using --success will be printed in the above elif statment)
                         else:
-                            print(f"{GRAY}Request failed for URL: {url} Response: {response}.{RESET}", f"{GRAY}Using /etc/hosts mapping: {ip} {new_map_entry}{RESET}")
+                            print(f"{GRAY}Request failed for URL: {url} Response: {response.status_code}.{RESET}", f"{GRAY}Using /etc/hosts mapping: {ip} {new_map_entry}{RESET}")
                     # it will print request: having no response at all (in this case response = False)
                     else:
-                        print(f"{GRAY}Request failed for URL: {url} Response: {response}.{RESET}", f"{GRAY}Using /etc/hosts mapping: {new_map_entry}{RESET}")
+                        print(f"{GRAY}Request failed for URL: {url} Response: {response}.{RESET}", f"{GRAY}Using /etc/hosts mapping: {new_map_entry}{RESET}")  # here the response will be False, that's why not using response.status_code
 
         except KeyboardInterrupt as e:
             print("\n⚠️ Interrupted by user. Restoring /etc/hosts from backup and Exiting.")
@@ -398,16 +398,16 @@ if __name__ == "__main__":
                     if response is not False:
                         # it will print request: having response 2xx, 3xx response codes
                         if response:
-                            print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response}.{RESET}", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}")
+                            print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response.status_code}.{RESET}", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}")
                         # it will print request: having any response code amoung the ones/one specified using --success in cli. if in cli --success option is not used, this elif statement won't be executed.
                         elif (success_value is not None) and (response.status_code in success_value):
-                            print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response}.{RESET}", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}")
+                            print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response.status_code}.{RESET}", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}")
                         # it will print request: having response 4xx, 5xx response codes, unless any of them is specified using --success in cli (the response codes in 4xx, 5xx range specified using --success will be printed in the above elif statment)
                         else:
-                            print(f"{GRAY}Request failed for URL: {url} Response: {response}.{RESET}", f"{GRAY}Using /etc/hosts mapping: {ip} {domain_part_of_url}{RESET}")
+                            print(f"{GRAY}Request failed for URL: {url} Response: {response.status_code}.{RESET}", f"{GRAY}Using /etc/hosts mapping: {ip} {domain_part_of_url}{RESET}")
                     # it will print request: having no response at all (in this case response = False)
                     else:
-                        print(f"{GRAY}Request failed for URL: {url} Response: {response}.{RESET}", f"{GRAY}Using /etc/hosts mapping: {ip} {domain_part_of_url}{RESET}")
+                        print(f"{GRAY}Request failed for URL: {url} Response: {response}.{RESET}", f"{GRAY}Using /etc/hosts mapping: {ip} {domain_part_of_url}{RESET}")  # here the response will be False, that's why not using response.status_code
                 
 
                 ## threading for all 6 urls of a domain plus all 10 domains
