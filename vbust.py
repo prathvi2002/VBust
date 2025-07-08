@@ -39,7 +39,10 @@ def map_and_probe_domain(ip, req_timeout, domain=None, proxy_url=None, threading
         try:
             proxies = {"http": proxy_url, "https": proxy_url} if proxy_url else None
             headers = {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0"
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0",
+                "Accept": "*/*",
+                "Accept-Language": "en;q=0.5, *;q=0.1",
+                "Accept-Encoding": "gzip, deflate, br"
             }
 
             if threading_threads:
@@ -363,7 +366,10 @@ if __name__ == "__main__":
             try:
                 proxies = {"http": proxy_url_value, "https": proxy_url_value} if proxy_url_value else None
                 headers = {
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0"
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0",
+                    "Accept": "*/*",
+                    "Accept-Language": "en;q=0.5, *;q=0.1",
+                    "Accept-Encoding": "gzip, deflate, br"
                 }
 
                 # Initialize the mapping for this domain batch by cleaning any existing mapping in /etc/hosts
