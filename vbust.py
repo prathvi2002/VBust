@@ -31,7 +31,7 @@ else:
     RESET = "\033[0m"
 
 
-def map_and_probe_domain(ip, req_timeout, domain=None, proxy_url=None, threading_threads=None, threads_domain_batch=None, success_codes=None):
+def map_and_probe_domain(ip, req_timeout, success_codes, domain=None, proxy_url=None, threading_threads=None, threads_domain_batch=None):
     try:
         # It clears the DNS cache maintained by systemd-resolved, forcing fresh lookups for future DNS queries. (idk if my wsl Ubuntu is using systemd-resolved for DNS resolution but still adding it here in case it is using it). even if dns is maintained by systemd-resolved we are editing /etc/hosts and maybe /etc/hosts is the file which is check the first for dns, i am being paranoid that's why flushing dns
         subprocess.run("sudo resolvectl flush-caches", shell=True, check=True)
@@ -73,8 +73,8 @@ def map_and_probe_domain(ip, req_timeout, domain=None, proxy_url=None, threading
                         # it will print request: having response 2xx, 3xx response codes
                         if response:
                             print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response.status_code}.{RESET}", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}")
-                        # it will print request: having any response code amoung the ones/one specified using --success in cli. if in cli --success option is not used, this elif statement won't be executed.
-                        elif (success_codes is not None) and (response.status_code in success_codes):
+                        # it will print request: having any response code amoung the ones/one specified using --success in cli.
+                        elif response.status_code in success_codes:
                             print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response.status_code}.{RESET}", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}")
                         # it will print request: having response 4xx, 5xx response codes, unless any of them is specified using --success in cli (the response codes in 4xx, 5xx range specified using --success will be printed in the above elif statment)
                         else:
@@ -183,8 +183,8 @@ def map_and_probe_domain(ip, req_timeout, domain=None, proxy_url=None, threading
                         # it will print request: having response 2xx, 3xx response codes
                         if response:
                             print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response.status_code}.{RESET}", f"Using /etc/hosts mapping: {new_map_entry}")
-                        # it will print request: having any response code amoung the ones/one specified using --success in cli. if in cli --success option is not used, this elif statement won't be executed.
-                        elif (response is not None) and (response.status_code in success_codes):
+                        # it will print request: having any response code amoung the ones/one specified using --success in cli.
+                        elif response.status_code in success_codes:
                             print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response.status_code}.{RESET}", f"Using /etc/hosts mapping: {ip} {new_map_entry}")
                         # it will print request: having response 4xx, 5xx response codes, unless any of them is specified using --success in cli (the response codes in 4xx, 5xx range specified using --success will be printed in the above elif statment)
                         else:
@@ -273,11 +273,14 @@ if __name__ == "__main__":
     dryrun_value = args.dryrun
     threads_value = args.threads
     timeout_value = args.timeout
-    success_value = args.success  # containing a list of all numbers (type int) provided via --success CLI arg
     if args.nocolour:
         nocolour_value = True
     else:
         nocolour_value = False
+    if args.success:
+        success_value = args.success  # containing a list of all numbers (type int) provided via --success CLI arg
+    else:
+        success_value = []
 
     if not ip_file_value or not domain_file_value:
         print(f"Required arguments --ips <ip_list.txt> --domains <domain_list.txt>")
@@ -334,7 +337,7 @@ if __name__ == "__main__":
             else:
                 # if --threads option is not used 
                 if threads_value is None:
-                    map_and_probe_domain(ip=ip, domain=domain, req_timeout=timeout_value, proxy_url=proxy_url_value, success_codes=success_value)
+                    map_and_probe_domain(ip=ip, success_codes=success_value, domain=domain, req_timeout=timeout_value, proxy_url=proxy_url_value)
 
                 # if --threads option is used 
                 else:
@@ -350,7 +353,7 @@ if __name__ == "__main__":
                     elif len(domain_batch) == threads_value:
                         to_check_left = False
                         # print("10 domains collected inside threads")  # for debugging
-                        map_and_probe_domain(ip=ip, domain=None, req_timeout=timeout_value, proxy_url=proxy_url_value, threading_threads=True, threads_domain_batch=domain_batch, success_codes=success_value)
+                        map_and_probe_domain(ip=ip, success_codes=success_value, domain=None, req_timeout=timeout_value, proxy_url=proxy_url_value, threading_threads=True, threads_domain_batch=domain_batch)
 
                         # Reset batch
                         domain_batch = []
@@ -399,8 +402,8 @@ if __name__ == "__main__":
                         # it will print request: having response 2xx, 3xx response codes
                         if response:
                             print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response.status_code}.{RESET}", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}")
-                        # it will print request: having any response code amoung the ones/one specified using --success in cli. if in cli --success option is not used, this elif statement won't be executed.
-                        elif (success_value is not None) and (response.status_code in success_value):
+                        # it will print request: having any response code amoung the ones/one specified using --success in cli.
+                        elif response.status_code in success_value:
                             print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response.status_code}.{RESET}", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}")
                         # it will print request: having response 4xx, 5xx response codes, unless any of them is specified using --success in cli (the response codes in 4xx, 5xx range specified using --success will be printed in the above elif statment)
                         else:
