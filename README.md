@@ -5,6 +5,8 @@ Some subdomains aren't always hosted in publically accessible DNS results, such 
 
 Because web servers can host multiple websites from one server when a website is requested from a client, the server knows which website the client wants from the `Host` header. We can utilize this host header by making changes to it and monitoring the response to see if we've discovered a new website.
 
+---
+
 VBust doesn't work with IPv6 addresses and I don't know why.
 
 Run `sudo chmod 666 /etc/hosts` on you linux machine when VBust is ran for the first time in a new Linux machine.
