@@ -73,7 +73,7 @@ def map_and_probe_domain(ip, req_timeout, success_codes, domain=None, proxy_url=
                         # it will print request: having response 2xx, 3xx response codes
                         if response:
                             if response.status_code in list(range(300, 400)):
-                                print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response.status_code}.{RESET}", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}. Location header: {response.headers.get('Location')}")
+                                print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response.status_code}.{RESET}", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}. Location header: {PINK}{response.headers.get('Location')}{RESET}")
                             else:
                                 print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response.status_code}.{RESET}", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}")
                         # it will print request: having any response code amoung the ones/one specified using --success in cli.
@@ -186,7 +186,7 @@ def map_and_probe_domain(ip, req_timeout, success_codes, domain=None, proxy_url=
                         # it will print request: having response 2xx, 3xx response codes
                         if response:
                             if response.status_code in list(range(300, 400)):
-                                print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response.status_code}.{RESET}", f"Using /etc/hosts mapping: {new_map_entry}. Location header: {response.headers.get('Location')}")
+                                print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response.status_code}.{RESET}", f"Using /etc/hosts mapping: {new_map_entry}. Location header: {PINK}{response.headers.get('Location')}{RESET}")
                             else:
                                 print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response.status_code}.{RESET}", f"Using /etc/hosts mapping: {new_map_entry}")
                         # it will print request: having any response code amoung the ones/one specified using --success in cli.
@@ -408,7 +408,7 @@ if __name__ == "__main__":
                         # it will print request: having response 2xx, 3xx response codes
                         if response:
                             if response.status_code in list(range(300, 400)):
-                                print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response.status_code}.{RESET}", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}. Location header: {response.headers.get('Location')}")
+                                print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response.status_code}.{RESET}", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}. Location header: {PINK}{response.headers.get('Location')}{RESET}")
                             else:
                                 print(f"{GREEN}{RESET}Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response.status_code}.{RESET}", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}")
                         # it will print request: having any response code amoung the ones/one specified using --success in cli.
