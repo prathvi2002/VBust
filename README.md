@@ -26,5 +26,5 @@ Run `sudo chmod 666 /etc/hosts` on you linux machine when VBust is ran for the f
 
 ---
 ## TODO
-- an option to treat response codes of a range as success (if felt the need to)
+- an option to treat response codes of a range as success [instead of using this option i can just see the normal output of VBust as by default it prints entries with all types of response codes] (if felt the need to)
 - an option to treat response codes of a range as failure (if felt the need to)
