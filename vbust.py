@@ -20,6 +20,7 @@ if "--nocolour" in sys.argv:
     GREEN = ""
     CYAN = ""
     PINK = ""
+    ORANGE= ""
     RESET = ""
 elif "--nocolour-success" in sys.argv:
     # If --nocolour flag is passed via command line, then colour colour variabes won't make effect except GRAY in code even if they are used
@@ -28,6 +29,7 @@ elif "--nocolour-success" in sys.argv:
     GREEN = ""
     CYAN = ""
     PINK = ""
+    ORANGE = ""
     RESET = "\033[0m"
 else:
     # ANSI escape codes to color specific parts of printed output for visibility and categorization.
@@ -36,10 +38,11 @@ else:
     GREEN = "\033[32m"
     CYAN = "\033[96m"
     PINK = "\033[95m"
+    ORANGE = "\033[91m"
     RESET = "\033[0m"
 
 
-def map_and_probe_domain(ip, req_timeout, success_codes, omit_noresponse, exclude_response_codes, domain=None, proxy_url=None, threading_threads=None, threads_domain_batch=None):
+def map_and_probe_domain(ip, req_timeout, success_codes, omit_noresponse, exclude_response_codes, exclude_response_sizes, domain=None, proxy_url=None, threading_threads=None, threads_domain_batch=None):
     try:
         # It clears the DNS cache maintained by systemd-resolved, forcing fresh lookups for future DNS queries. (idk if my wsl Ubuntu is using systemd-resolved for DNS resolution but still adding it here in case it is using it). even if dns is maintained by systemd-resolved we are editing /etc/hosts and maybe /etc/hosts is the file which is check the first for dns, i am being paranoid that's why flushing dns
         subprocess.run("sudo resolvectl flush-caches", shell=True, check=True)
@@ -70,32 +73,35 @@ def map_and_probe_domain(ip, req_timeout, success_codes, omit_noresponse, exclud
                     try:
                         # after done mapping all batch domains to current IP in /etc/hosts in the before logic, making an HTTP request to url provided to see if it succeeds.
                         response = requests.get(url, timeout=req_timeout, proxies=proxies, verify=False, allow_redirects=False, headers=headers)
+                        response_body_size = len(response.content)
                     # Handles all request failures
                     except Exception as e:
                         response = False
+                        response_body_size = False
 
                     parsed_url = urlparse(url)
                     domain_part_of_url = parsed_url.netloc
 
-                    if response is not False:
-                        if response.status_code not in exclude_response_codes:
-                            # it will print request: having response 2xx, 3xx response codes (unless any of it is not specified in --omit-responsecodes option coz of upper if statement)
-                            if response:
-                                if response.status_code in list(range(300, 400)):
-                                    print(f"Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response.status_code}.{RESET}", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}. Location header: {PINK}{response.headers.get('Location')}{RESET}")
+                    if response_body_size not in exclude_response_sizes:
+                        if response is not False:
+                            if response.status_code not in exclude_response_codes:
+                                # it will print request: having response 2xx, 3xx response codes (unless any of it is not specified in --omit-responsecodes option coz of upper if statement)
+                                if response:
+                                    if response.status_code in list(range(300, 400)):
+                                        print(f"Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response.status_code}{RESET} Size: {ORANGE}{response_body_size}{RESET}.", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}. Location header: {PINK}{response.headers.get('Location')}{RESET}")
+                                    else:
+                                        print(f"Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response.status_code}{RESET} Size: {ORANGE}{response_body_size}{RESET}.", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}")
+                                # it will print request: having any response code amoung the ones/one specified using --success in cli.
+                                elif response.status_code in success_codes:
+                                    print(f"Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response.status_code}{RESET} Size: {ORANGE}{response_body_size}{RESET}.", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}")
+                                # it will print request: having response 4xx, 5xx response codes, unless any of them is specified using --success in cli (the response codes in 4xx, 5xx range specified using --success will be printed in the above elif statment)
                                 else:
-                                    print(f"Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response.status_code}.{RESET}", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}")
-                            # it will print request: having any response code amoung the ones/one specified using --success in cli.
-                            elif response.status_code in success_codes:
-                                print(f"Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response.status_code}.{RESET}", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}")
-                            # it will print request: having response 4xx, 5xx response codes, unless any of them is specified using --success in cli (the response codes in 4xx, 5xx range specified using --success will be printed in the above elif statment)
-                            else:
-                                print(f"{GRAY}Request failed for URL: {url} Response: {response.status_code}.", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}{RESET}")
-                    # it will print request: having no response at all (in this case response = False)
-                    else:
-                        # if user hasn't used --omit-noresponse option in cli
-                        if omit_noresponse is not True:
-                            print(f"{GRAY}Request failed for URL: {url} Response: {response}.", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}{RESET}")  # here the response is going to be False, that's why not using response.status_code
+                                    print(f"{GRAY}Request failed for URL: {url} Response: {response.status_code} Size: {response_body_size}.", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}{RESET}")
+                        # it will print request: having no response at all (in this case response = False)
+                        else:
+                            # if user hasn't used --omit-noresponse option in cli
+                            if omit_noresponse is not True:
+                                print(f"{GRAY}Request failed for URL: {url} Response: {response} Size: {response_body_size}.", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}{RESET}")  # here the response is going to be False, that's why not using response.status_code
                 
 
                 ## threading for all 6 urls of a domain plus all 10 domains
@@ -189,29 +195,32 @@ def map_and_probe_domain(ip, req_timeout, success_codes, omit_noresponse, exclud
                     # Makes a GET request to current URL. Timeout is 10 seconds. Through the proxy if supplied in cli argument. Without SSL verification. Not following redirects.
                     try:
                         response = requests.get(url, timeout=req_timeout, proxies=proxies, verify=False, allow_redirects=False, headers=headers)
+                        response_body_size = len(response.content)
                     # Handles all request failures
                     except Exception as e:
                         response = False
+                        response_body_size = False
 
-                    if response is not False:
-                        if response.status_code not in exclude_response_codes:
-                            # it will print request: having response 2xx, 3xx response codes (unless any of it is not specified in --omit-responsecodes option coz of upper if statement)
-                            if response:
-                                if response.status_code in list(range(300, 400)):
-                                    print(f"Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response.status_code}.{RESET}", f"Using /etc/hosts mapping: {new_map_entry}. Location header: {PINK}{response.headers.get('Location')}{RESET}")
+                    if response_body_size not in exclude_response_sizes:
+                        if response is not False:
+                            if response.status_code not in exclude_response_codes:
+                                # it will print request: having response 2xx, 3xx response codes (unless any of it is not specified in --omit-responsecodes option coz of upper if statement)
+                                if response:
+                                    if response.status_code in list(range(300, 400)):
+                                        print(f"Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response.status_code}{RESET} Size: {ORANGE}{response_body_size}{RESET}.", f"Using /etc/hosts mapping: {new_map_entry}. Location header: {PINK}{response.headers.get('Location')}{RESET}")
+                                    else:
+                                        print(f"Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response.status_code}{RESET} Size: {ORANGE}{response_body_size}{RESET}.", f"Using /etc/hosts mapping: {new_map_entry}")
+                                # it will print request: having any response code amoung the ones/one specified using --success in cli.
+                                elif response.status_code in success_codes:
+                                    print(f"Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response.status_code}.{RESET} Size: {ORANGE}{response_body_size}{RESET}.", f"Using /etc/hosts mapping: {ip} {new_map_entry}")
+                                # it will print request: having response 4xx, 5xx response codes, unless any of them is specified using --success in cli (the response codes in 4xx, 5xx range specified using --success will be printed in the above elif statment)
                                 else:
-                                    print(f"Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response.status_code}.{RESET}", f"Using /etc/hosts mapping: {new_map_entry}")
-                            # it will print request: having any response code amoung the ones/one specified using --success in cli.
-                            elif response.status_code in success_codes:
-                                print(f"Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response.status_code}.{RESET}", f"Using /etc/hosts mapping: {ip} {new_map_entry}")
-                            # it will print request: having response 4xx, 5xx response codes, unless any of them is specified using --success in cli (the response codes in 4xx, 5xx range specified using --success will be printed in the above elif statment)
-                            else:
-                                print(f"{GRAY}Request failed for URL: {url} Response: {response.status_code}.", f"{GRAY}Using /etc/hosts mapping: {ip} {new_map_entry}{RESET}")
-                    # it will print request: having no response at all (in this case response = False)
-                    else:
-                        # if user hasn't used --omit-noresponse option in cli
-                        if omit_noresponse is not True:
-                            print(f"{GRAY}Request failed for URL: {url} Response: {response}.", f"{GRAY}Using /etc/hosts mapping: {new_map_entry}{RESET}")  # here the response will be False, that's why not using response.status_code
+                                    print(f"{GRAY}Request failed for URL: {url} Response: {response.status_code} Size: {response_body_size}.", f"{GRAY}Using /etc/hosts mapping: {ip} {new_map_entry}{RESET}")
+                        # it will print request: having no response at all (in this case response = False)
+                        else:
+                            # if user hasn't used --omit-noresponse option in cli
+                            if omit_noresponse is not True:
+                                print(f"{GRAY}Request failed for URL: {url} Response: {response} Size: {response_body_size}.", f"{GRAY}Using /etc/hosts mapping: {new_map_entry}{RESET}")  # here the response will be False, that's why not using response.status_code
 
         except KeyboardInterrupt as e:
             print("\n⚠️ Interrupted by user. Restoring /etc/hosts from backup and Exiting.")
@@ -299,6 +308,13 @@ if __name__ == "__main__":
         default=None,
         help="Don't print entries with these response codes. Example: --omit-responsecodes 301 404. This option takes precedence over the default success codes (2xx, 3xx) and any success codes specified via --success option."
     )
+    parser.add_argument(
+        "--omit-responsesizes",
+        nargs="+",
+        type=int,
+        default=None,
+        help="Don't print entries with these response sizes. Example: --omit-responsecodes 3512 2000."
+    )
 
     # Parse the arguments
     args = parser.parse_args()
@@ -323,6 +339,10 @@ if __name__ == "__main__":
         omit_responsecodes_value = args.omit_responsecodes  # containing a list of all numbers (type int) provided via --omit-responsecodes CLI arg
     else:
         omit_responsecodes_value = []
+    if args.omit_responsesizes:
+        omit_responsesizes_value = args.omit_responsesizes  # containing a list of all numbers (type int) provided via --omit-responsesizes CLI arg
+    else:
+        omit_responsesizes_value = []
 
     if not ip_file_value or not domain_file_value:
         print(f"Required arguments --ips <ip_list.txt> --domains <domain_list.txt>")
@@ -379,7 +399,7 @@ if __name__ == "__main__":
             else:
                 # if --threads option is not used 
                 if threads_value is None:
-                    map_and_probe_domain(ip=ip, success_codes=success_value, omit_noresponse=omit_noresponse_value, exclude_response_codes=omit_responsecodes_value, domain=domain, req_timeout=timeout_value, proxy_url=proxy_url_value)
+                    map_and_probe_domain(ip=ip, success_codes=success_value, omit_noresponse=omit_noresponse_value, exclude_response_codes=omit_responsecodes_value, exclude_response_sizes=omit_responsesizes_value, domain=domain, req_timeout=timeout_value, proxy_url=proxy_url_value)
 
                 # if --threads option is used 
                 else:
@@ -395,7 +415,7 @@ if __name__ == "__main__":
                     elif len(domain_batch) == threads_value:
                         to_check_left = False
                         # print("10 domains collected inside threads")  # for debugging
-                        map_and_probe_domain(ip=ip, success_codes=success_value, omit_noresponse=omit_noresponse_value, exclude_response_codes=omit_responsecodes_value, domain=None, req_timeout=timeout_value, proxy_url=proxy_url_value, threading_threads=True, threads_domain_batch=domain_batch)
+                        map_and_probe_domain(ip=ip, success_codes=success_value, omit_noresponse=omit_noresponse_value, exclude_response_codes=omit_responsecodes_value, exclude_response_sizes=omit_responsesizes_value, domain=None, req_timeout=timeout_value, proxy_url=proxy_url_value, threading_threads=True, threads_domain_batch=domain_batch)
 
                         # Reset batch
                         domain_batch = []
@@ -433,32 +453,35 @@ if __name__ == "__main__":
                     try:
                         # after done mapping all batch domains to current IP in /etc/hosts in the before logic, making an HTTP request to url provided to see if it succeeds.
                         response = requests.get(url, timeout=timeout_value, proxies=proxies, verify=False, allow_redirects=False, headers=headers)
+                        response_body_size = len(response.content)
                     # Handles all request failures
                     except Exception as e:
                         response = False
+                        response_body_size = False
 
                     parsed_url = urlparse(url)
                     domain_part_of_url = parsed_url.hostname
 
-                    if response is not False:
-                        if response.status_code not in omit_responsecodes_value:
-                            # it will print request: having response 2xx, 3xx response codes (unless any of it is not specified in --omit-responsecodes option coz of upper if statement)
-                            if response:
-                                if response.status_code in list(range(300, 400)):
-                                    print(f"Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response.status_code}.{RESET}", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}. Location header: {PINK}{response.headers.get('Location')}{RESET}")
+                    if response_body_size not in omit_responsesizes_value:
+                        if response is not False:
+                            if response.status_code not in omit_responsecodes_value:
+                                # it will print request: having response 2xx, 3xx response codes (unless any of it is not specified in --omit-responsecodes option coz of upper if statement)
+                                if response:
+                                    if response.status_code in list(range(300, 400)):
+                                        print(f"Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response.status_code}{RESET} Size: {ORANGE}{response_body_size}{RESET}.", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}. Location header: {PINK}{response.headers.get('Location')}{RESET}")
+                                    else:
+                                        print(f"Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response.status_code}{RESET} Size: {ORANGE}{response_body_size}{RESET}.", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}")
+                                # it will print request: having any response code amoung the ones/one specified using --success in cli.
+                                elif response.status_code in success_value:
+                                    print(f"Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response.status_code}{RESET} Size: {ORANGE}{response_body_size}{RESET}.", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}")
+                                # it will print request: having response 4xx, 5xx response codes, unless any of them is specified using --success in cli (the response codes in 4xx, 5xx range specified using --success will be printed in the above elif statment)
                                 else:
-                                    print(f"Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response.status_code}.{RESET}", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}")
-                            # it will print request: having any response code amoung the ones/one specified using --success in cli.
-                            elif response.status_code in success_value:
-                                print(f"Request succeed for URL: {CYAN}{url}{RESET} Response: {YELLOW}{response.status_code}.{RESET}", f"Using /etc/hosts mapping: {ip} {domain_part_of_url}")
-                            # it will print request: having response 4xx, 5xx response codes, unless any of them is specified using --success in cli (the response codes in 4xx, 5xx range specified using --success will be printed in the above elif statment)
-                            else:
-                                print(f"{GRAY}Request failed for URL: {url} Response: {response.status_code}.", f"{GRAY}Using /etc/hosts mapping: {ip} {domain_part_of_url}{RESET}")
-                    # it will print request: having no response at all (in this case response = False)
-                    else:
-                        # if user hasn't used --omit-noresponse option in cli
-                        if omit_noresponse_value is not True:
-                            print(f"{GRAY}Request failed for URL: {url} Response: {response}.", f"{GRAY}Using /etc/hosts mapping: {ip} {domain_part_of_url}{RESET}")  # here the response will be False, that's why not using response.status_code
+                                    print(f"{GRAY}Request failed for URL: {url} Response: {response.status_code} Size: {response_body_size}.", f"{GRAY}Using /etc/hosts mapping: {ip} {domain_part_of_url}{RESET}")
+                        # it will print request: having no response at all (in this case response = False)
+                        else:
+                            # if user hasn't used --omit-noresponse option in cli
+                            if omit_noresponse_value is not True:
+                                print(f"{GRAY}Request failed for URL: {url} Response: {response} Size: {response_body_size}.", f"{GRAY}Using /etc/hosts mapping: {ip} {domain_part_of_url}{RESET}")  # here the response will be False, that's why not using response.status_code
                 
 
                 ## threading for all 6 urls of a domain plus all 10 domains
