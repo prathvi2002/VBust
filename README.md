@@ -7,9 +7,9 @@ Because web servers can host multiple websites from one server when a website is
 
 ---
 
-VBust doesn't work with IPv6 addresses and I don't know why.
+VBust doesn't work with IPv6 addresses.
 
-Run `sudo chmod 666 /etc/hosts` on you linux machine when VBust is ran for the first time in a new Linux machine.
+(dangerous but required) Run `sudo chmod 666 /etc/hosts` on you linux machine when VBust is ran for the first time in a new Linux machine.
 
 ### Some points to keep in mind or might come handy while using VBust
 - *Sometimes* if the tool is interrupted using `ctrl`+`c`, it will not be able to restore orginal `/etc/hosts` from backup `/etc/hosts.bak` created by VBust.
