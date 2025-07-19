@@ -1,2 +1,0 @@
-co-cf.latam.saea1.aws.indriverapp.com
-example-1.com

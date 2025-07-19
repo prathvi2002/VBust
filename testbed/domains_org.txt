@@ -1,7 +1,0 @@
-example.com
-aads.com
-example-1.com
-www.google.com
-latam-mx.saea1.aws.indriverapp.com
-latam0000-mx.saea1.aws.indriverapp.com
-bom12s16-in-f4.1e100.net
