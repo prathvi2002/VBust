@@ -5,7 +5,7 @@ Some subdomains aren't always hosted in publically accessible DNS results, such 
 
 Because web servers can host multiple websites from one server when a website is requested from a client, the server knows which website the client wants from the `Host` header. We can utilize this host header by making changes to it and monitoring the response to see if we've discovered a new website.
 
-### Virtual brute force targets:
+### Virtual brute force target IPs filtering (not applicable to all targets):
 - Take a list of IPs.
 - Check which ones are alive (not required).
 - For each alive IP, run whois and keep only those whose NetName contains "<target>" using the below script. Can install `parallel` with `sudo apt install parallel`.
