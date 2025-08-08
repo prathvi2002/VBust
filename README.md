@@ -11,12 +11,11 @@ Because web servers can host multiple websites from one server when a website is
 - For each alive IP, run whois and keep only those whose NetName contains "<target>" using the below script.
     - ```
     bash
-    while read ip; do 
-        if ping -c1 -W1 "$ip" &>/dev/null; then 
-            netname=$(whois "$ip" | grep -i 'NetName' | grep -i '<target>')
-            [ -n "$netname" ] && echo "$ip: $netname"
-        fi
+    while read ip; do
+        netname=$(whois "$ip" | grep -i 'NetName' | grep -i '<target_name>')
+        [ -n "$netname" ] && echo "$ip: $netname"
     done < "<alive_ips.txt>"
+
     ```
 
 ---
