@@ -7,7 +7,7 @@ Because web servers can host multiple websites from one server when a website is
 
 ### Virtual brute force target IPs filtering (not applicable to all targets):
 - Take a list of IPs.
-- Check which ones are alive (not required).
+- Check which ones are alive (not required for below step).
 - For each alive IP, run whois and keep only those whose NetName contains "<target>" using the below script. Can install `parallel` with `sudo apt install parallel`.
     - ```bash
     parallel -j 30 -a "<alive_ips.txt>" 'netname=$(whois {} | grep -i "NetName" | grep -i "<target_name>"); [ -n "$netname" ] && echo "{}: $netname"'
