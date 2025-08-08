@@ -7,15 +7,10 @@ Because web servers can host multiple websites from one server when a website is
 
 ### Virtual brute force targets:
 - Take a list of IPs.
-- Check which ones are alive.
-- For each alive IP, run whois and keep only those whose NetName contains "<target>" using the below script.
-    - ```
-    bash
-    while read ip; do
-        netname=$(whois "$ip" | grep -i 'NetName' | grep -i '<target_name>')
-        [ -n "$netname" ] && echo "$ip: $netname"
-    done < "<alive_ips.txt>"
-
+- Check which ones are alive (not required).
+- For each alive IP, run whois and keep only those whose NetName contains "<target>" using the below script. Can install `parallel` with `sudo apt install parallel`.
+    - ```bash
+    parallel -j 30 -a "<alive_ips.txt>" 'netname=$(whois {} | grep -i "NetName" | grep -i "<target_name>"); [ -n "$netname" ] && echo "{}: $netname"'
     ```
 
 ---
