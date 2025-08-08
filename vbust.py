@@ -4,6 +4,7 @@ import sys
 import subprocess
 from pathlib import Path
 import argparse
+import argcomplete
 import requests
 import urllib3  # For handling SSL warning suppression
 import ipaddress  # for checking invalid ips
@@ -316,6 +317,7 @@ if __name__ == "__main__":
         help="Don't print entries with these response sizes. Example: --omit-responsecodes 3512 2000."
     )
 
+    argcomplete.autocomplete(parser)
     # Parse the arguments
     args = parser.parse_args()
 
