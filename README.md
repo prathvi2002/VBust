@@ -34,5 +34,7 @@ VBust doesn't work with IPv6 addresses.
 
 ---
 ## TODO
+- Implement the technique [hakoriginfinder](https://github.com/hakluke/hakoriginfinder) uses to find origin IPs.
+    - This tool will first make a HTTP request to the hostname/URL that you provide and store the response, then it will make a request to every IP address that you provide via HTTP (80) and HTTPS (443) by default (more ports can be given via option), with the Host header set to the original host(:port). Each response is then compared to the original using the Levenshtein algorithm to determine similarity. If the response is similar, it will be deemed a match.
 - an option to treat response codes of a range as success [instead of using this option i can just see the normal output of VBust as by default it prints entries with all types of response codes] (if felt the need to)
 - an option to treat response codes of a range as failure (if felt the need to)
